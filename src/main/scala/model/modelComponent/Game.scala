@@ -4,6 +4,8 @@ import com.google.inject.Inject
 import model.*
 import model.modelComponent.PlayerState.{LOST, WON}
 
+import java.util.Optional
+
 enum GameState {
   case Initialized, Betting, Started, Evaluated
 }

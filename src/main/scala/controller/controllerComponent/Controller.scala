@@ -49,7 +49,6 @@ case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface
     } else {
       notifyObservers(Event.invalidCommand)
     }
-
   }
 
   override def leavePlayer(): Unit = {
