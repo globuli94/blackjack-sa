@@ -31,28 +31,28 @@ case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface)
 
   override def startGame(): Try[Unit] = {
     game.startGame match {
-      case Some(updatedGame) =>
+      case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.start)
         saveGame()
         Try(())
-      case None =>
+      case _ =>
         notifyObservers(Event.invalidCommand)
         Failure(Exception("Game can't be started right now"))
     }
   }
 
   override def addPlayer(name: String): Try[Unit] = {
-    game.createPlayer match {
-      case Some(updatedGame) =>
+    game.createPlayer(name) match {
+      case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.addPlayer)
         saveGame()
         Try(())
-      case None =>
+      case _ =>
         // Note: Event.errPlayerNameExists is currently not represented here anymore
         notifyObservers(Event.invalidCommand)
-        Failure(Exception("Cannot add players right now"))
+        Failure(new Exception("Cannot add players right now"))
     }
   }
 
@@ -64,59 +64,63 @@ case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface)
     } else {
       notifyObservers(invalidCommand)
     }
-    
-    
   }
 
-  override def hitPlayer(): Unit = {
-    val player = game.getPlayers(game.getIndex)
-    if (player.hand.canHit && game.getState == GameState.Started) {
-      game = game.hitPlayer
-      notifyObservers(Event.hitNextPlayer)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
+  override def hitPlayer(): Try[Unit] = {
+    game.hitPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.hitNextPlayer)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Cannot hit player right now"))
     }
   }
 
-  override def standPlayer(): Unit = {
-    if (game.getState == GameState.Started) {
-      game = game.standPlayer
-      notifyObservers(Event.standNextPlayer)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
-    }
-
-  }
-
-  override def doubleDown(): Unit = {
-    val player = game.getPlayers(game.getIndex)
-
-    if (game.getState == GameState.Started && player.hand.canDoubleDown && player.bet <= player.money) {
-      game = game.doubleDownPlayer
-      notifyObservers(Event.doubleDown)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidBet)
+  override def standPlayer(): Try[Unit] = {
+    game.standPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.standNextPlayer)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Player can't stand right now"))
     }
   }
 
-  override def bet(amount: String): Unit = {
-    if (game.getState == GameState.Betting) {
-      try {
-        if (game.isValidBet(amount.toInt) && amount.toInt > 0) {
-          game = game.betPlayer(amount.toInt)
+  override def doubleDown(): Try[Unit] = {
+    game.doubleDownPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.doubleDown)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidBet)
+        Failure(Exception("Cannot double down right now"))
+    }
+  }
+
+  override def bet(amount: String): Try[Unit] = {
+    try {
+      game.betPlayer(amount.toInt) match {
+        case Some(updatedGame: GameInterface) =>
+          game = updatedGame
           notifyObservers(Event.bet)
           saveGame()
-        } else {
-          notifyObservers(Event.invalidBet)
-        }
-      } catch {
-        case _: NumberFormatException => notifyObservers(Event.invalidCommand)
+          Try(())
+        case _ =>
+          notifyObservers(Event.invalidCommand)
+          Failure(Exception("Invalid bet amount"))
       }
-    } else {
-      notifyObservers(Event.invalidCommand)
+    } catch {
+      case _: NumberFormatException =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Bet was not integer value"))
     }
   }
 

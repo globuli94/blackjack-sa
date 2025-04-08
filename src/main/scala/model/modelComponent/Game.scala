@@ -1,10 +1,7 @@
 package model.modelComponent
 
 import com.google.inject.Inject
-import model.*
-import model.modelComponent.GameState.{Evaluated, Initialized}
-import model.modelComponent.PlayerState.{LOST, WON}
-
+import model.GameInterface
 import java.util.Optional
 
 enum GameState {
@@ -28,7 +25,7 @@ case class Game @Inject() (
 
   override def createPlayer(name: String): Option[GameInterface] = {
     state match {
-      case Initialized | Evaluated => 
+      case GameState.Initialized | GameState.Evaluated =>
         if players.length < 4 then {
           if (players.exists(_.name == name))
             // Player with name already exists
@@ -96,7 +93,7 @@ case class Game @Inject() (
         val new_dealer: Dealer = Dealer(dealer.hand.addCard(card), dealer.state)
         Some(copy(dealer = new_dealer, deck = new_deck).evaluate)
       // No cards => hitting is not possible => we return nothing
-      case None => None
+      case _ => None
     }
   }
 
@@ -115,10 +112,10 @@ case class Game @Inject() (
             }
             Some(copy(players = updated_players, deck = new_deck).evaluate)
           // Player exists but there is no cards left on deck
-          case None => None
+          case _ => None
         }
       // Current player idx doesn't exist => we can't hit player
-      case None => None
+      case _ => None
     }
   }
 
@@ -136,62 +133,83 @@ case class Game @Inject() (
 
         val next_idx = (current_idx + 1) % players.length
         Some(copy(players = updated_players, current_idx = next_idx).evaluate)
-      case None => None
+      case _ => None
     }
   }
 
   // subtracts amount of money from player, updates money, bet and player state to playing
   override def betPlayer(amount: Int): Option[GameInterface] = {
-    players.lift(current_idx) match {
-      case Some(player) =>
-        val new_balance = player.money - amount
-        val updated_players: List[Player] = players.map({
-          p => {
-            if (p == player)
-              Player(p.name, p.hand, new_balance, amount, PlayerState.Playing)
-            else p
-          }
-        })
+    state match {
+      case GameState.Betting =>
+        players.lift(current_idx) match {
+          case Some(player) =>
+            // Check if amount is valid and player has enough money
+            if(amount > 0 && amount <= player.money) {
+              val new_balance = player.money - amount
+              val updated_players: List[Player] = players.map({
+                p => {
+                  if (p == player)
+                    Player(p.name, p.hand, new_balance, amount, PlayerState.Playing)
+                  else p
+                }
+              })
 
-        Some(copy(
-          players = updated_players,
-          current_idx = if(current_idx == players.length - 1) current_idx else current_idx + 1
-        ).evaluate)
-      case None => None
+              Some(copy(
+                players = updated_players,
+                current_idx = if (current_idx == players.length - 1) current_idx else current_idx + 1
+              ).evaluate)
+            } else {
+              // Player doesn't have enough money
+              None
+            }
+          case _ => None
+        }
+      case _ => None
     }
   }
 
   override def doubleDownPlayer: Option[GameInterface] = {
-    players.lift(current_idx) match {
-      case Some(player) =>
-        val new_bet = player.bet * 2
-        val new_balance = player.money - player.bet
+    state match {
+      // We can only bet when the game already started
+      case GameState.Started =>
+        players.lift(current_idx) match {
+          case Some(player) =>
+            // Check if player can actually double down and if he has enough money
+            if(player.hand.canDoubleDown && player.bet <= player.money) {
+              val new_bet = player.bet * 2
+              val new_balance = player.money - player.bet
 
-        deck.draw match {
-          case Some((card: Card, new_deck: Deck)) =>
-            val new_player_hand = player.hand.addCard(card)
-            val updated_players: List[Player] = players.map({
-              p => {
-                if (p == player)
-                  Player(p.name, new_player_hand, new_balance, new_bet, PlayerState.DoubledDown)
-                else p
+              deck.draw match {
+                case Some((card: Card, new_deck: Deck)) =>
+                  val new_player_hand = player.hand.addCard(card)
+                  val updated_players: List[Player] = players.map({
+                    p => {
+                      if (p == player)
+                        Player(p.name, new_player_hand, new_balance, new_bet, PlayerState.DoubledDown)
+                      else p
+                    }
+                  })
+
+                  Some(copy(
+                    players = updated_players,
+                    current_idx = if(current_idx == players.length - 1) current_idx else current_idx + 1,
+                    deck = new_deck
+                  ).evaluate)
+                case _ => None
               }
-            })
-
-            Some(copy(
-              players = updated_players,
-              current_idx = if(current_idx == players.length - 1) current_idx else current_idx + 1,
-              deck = new_deck
-            ).evaluate)
-          case None => None
+            } else {
+              // Player doesn't have enough money or cant double down right now
+              None
+            }
+          case _ => None
         }
-      case None => None
+      case _ => None
     }
   }
 
   override def startGame: Option[GameInterface] = {
     state match {
-      case Initialized | Evaluated if players.nonEmpty =>
+      case GameState.Initialized | GameState.Evaluated if players.nonEmpty =>
         val updated_players = players.map(
           p => Player(p.name, Hand(), p.money, p.bet, PlayerState.Betting)
         )
@@ -250,18 +268,18 @@ case class Game @Inject() (
           val evaluated_players_bets = evaluated_players.map { p =>
             p.state match {
               case PlayerState.Blackjack if dealer.hand.hasBlackjack =>
-                Player(p.name, p.hand, p.money, 0, LOST)
+                Player(p.name, p.hand, p.money, 0, PlayerState.LOST)
               case PlayerState.Blackjack =>
                 val money_after_winning = p.money + p.bet * 2
-                Player(p.name, p.hand, money_after_winning, 0, WON)
+                Player(p.name, p.hand, money_after_winning, 0, PlayerState.WON)
               case PlayerState.Standing | PlayerState.DoubledDown
                 if dealer.hand.getHandValue >= p.hand.getHandValue && !dealer.hand.isBust =>
-                  Player(p.name, p.hand, p.money, 0, LOST)
+                  Player(p.name, p.hand, p.money, 0, PlayerState.LOST)
               case PlayerState.Standing | PlayerState.DoubledDown =>
                 val money_after_winning = p.money + p.bet * 2
-                Player(p.name, p.hand, money_after_winning, 0, WON)
+                Player(p.name, p.hand, money_after_winning, 0, PlayerState.WON)
               case PlayerState.Busted =>
-                Player(p.name, p.hand, p.money, 0, LOST)
+                Player(p.name, p.hand, p.money, 0, PlayerState.LOST)
               case _ => p
             }
           }
