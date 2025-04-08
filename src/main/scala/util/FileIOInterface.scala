@@ -1,9 +1,9 @@
 package util
 
-import model.ModelInterface
+import model.GameInterface
 
 
 trait FileIOInterface {
-  def load(path: String = ""): ModelInterface
-  def save(game: ModelInterface, path: String = ""): Unit
+  def load(path: String = ""): GameInterface
+  def save(game: GameInterface, path: String = ""): Unit
 }

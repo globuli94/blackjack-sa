@@ -1,6 +1,6 @@
 package util.fileIOComponent.JSON
 
-import model.ModelInterface
+import model.GameInterface
 import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, Hand, Player, PlayerState}
 import play.api.libs.json.{JsError, JsPath, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 import play.api.libs.functional.syntax.*
@@ -103,7 +103,7 @@ class FileIOJSON extends FileIOInterface {
   }
 
   // GAME
-  implicit val gameWrites: Writes[ModelInterface] = (game: ModelInterface) => Json.obj(
+  implicit val gameWrites: Writes[GameInterface] = (game: GameInterface) => Json.obj(
     "current_idx" -> game.getIndex,
     "players" -> game.getPlayers,
     "deck" -> game.getDeck,
@@ -111,7 +111,7 @@ class FileIOJSON extends FileIOInterface {
     "state" -> game.getState.toString
   )
 
-  implicit val gameReads: Reads[ModelInterface] = (
+  implicit val gameReads: Reads[GameInterface] = (
     (JsPath \ "current_idx").read[Int] and // Reads the list of cards
       (JsPath \ "players").read[List[Player]] and
       (JsPath \ "deck").read[Deck] and
@@ -120,7 +120,7 @@ class FileIOJSON extends FileIOInterface {
     // Reads the HandState (Play, Stand, etc.)
     )((idx, players, deck, dealer, state) => Game(idx, players, deck, dealer, state))
 
-  override def load(path: String = "game.json"): ModelInterface = {
+  override def load(path: String = "game.json"): GameInterface = {
     val source = Source.fromFile(path) // open source
 
     try {
@@ -128,7 +128,7 @@ class FileIOJSON extends FileIOInterface {
       val json = Json.parse(source.getLines.mkString)
 
       // try convert to game using validate
-      json.validate[ModelInterface] match {
+      json.validate[GameInterface] match {
         case JsSuccess(game, _) => game
         case JsError(errors) =>
           throw new Exception("Error parsing JSON: " + errors.toString)
@@ -138,7 +138,7 @@ class FileIOJSON extends FileIOInterface {
     }
   }
 
-  override def save(game: ModelInterface, path: String = "game.json"): Unit = {
+  override def save(game: GameInterface, path: String = "game.json"): Unit = {
     val jsonString = Json.stringify(Json.toJson(game))
     new PrintWriter(path) {
       write(jsonString);

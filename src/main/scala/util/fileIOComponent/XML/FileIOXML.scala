@@ -1,6 +1,6 @@
 package util.fileIOComponent.XML
 
-import model.ModelInterface
+import model.GameInterface
 import model.modelComponent.GameState.{Evaluated, Initialized, Started}
 
 import model.modelComponent.PlayerState.*
@@ -119,7 +119,7 @@ class FileIOXML extends FileIOInterface {
   }
 
   // GAME
-  private def gameToXML(game: ModelInterface): Elem = {
+  private def gameToXML(game: GameInterface): Elem = {
     <game>
       <current_idx>{game.getIndex}</current_idx>
       <players>
@@ -131,7 +131,7 @@ class FileIOXML extends FileIOInterface {
     </game>
   }
 
-  private def gameFromXML(node: Node): ModelInterface = {
+  private def gameFromXML(node: Node): GameInterface = {
     val idx = (node \ "current_idx").text.toInt
     val players = (node \ "players" \ "player").map(playerFromXML).toList
     val deck = deckFromXML((node \ "deck").head)
@@ -140,12 +140,12 @@ class FileIOXML extends FileIOInterface {
     Game(idx, players, deck, dealer, state)
   }
 
-  override def load(path: String = "game.xml"): ModelInterface = {
+  override def load(path: String = "game.xml"): GameInterface = {
     val source = XML.loadFile(path)
     gameFromXML(source)
   }
 
-  override def save(game: ModelInterface, path: String = "game.xml"): Unit = {
+  override def save(game: GameInterface, path: String = "game.xml"): Unit = {
     val xml = gameToXML(game)
     val prettyPrinter = new PrettyPrinter(120, 4)
     val prettyXml = prettyPrinter.format(xml)

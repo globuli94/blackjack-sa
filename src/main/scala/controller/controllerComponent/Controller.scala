@@ -2,14 +2,16 @@ package controller.controllerComponent
 
 import com.google.inject.Inject
 import controller.ControllerInterface
-import model.ModelInterface
+import model.GameInterface
 import model.modelComponent.GameState
 import util.Event.*
 import util.{Event, FileIOInterface, Observable}
 
-case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+import scala.util.{Failure, Try}
 
-  override def getGame: ModelInterface = game
+case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+
+  override def getGame: GameInterface = game
 
   override def saveGame(): Unit = {
     fileIO.save(game)
@@ -27,27 +29,30 @@ case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface
     saveGame()
   }
 
-  override def startGame(): Unit = {
-    if ((game.getState == GameState.Initialized || game.getState == GameState.Evaluated) && game.getPlayers.nonEmpty) {
-      game = game.startGame
-      notifyObservers(Event.start)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
+  override def startGame(): Try[Unit] = {
+    game.startGame match {
+      case Some(updatedGame) =>
+        game = updatedGame
+        notifyObservers(Event.start)
+        saveGame()
+        Try(())
+      case None =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Game can't be started right now"))
     }
   }
 
-  override def addPlayer(name: String): Unit = {
-    if (game.getState == GameState.Initialized || game.getState == GameState.Evaluated) {
-      if(game.getPlayers.exists(_.name == name)) {
-        notifyObservers(Event.errPlayerNameExists)
-      } else {
-        game = game.createPlayer(name)
+  override def addPlayer(name: String): Try[Unit] = {
+    game.createPlayer match {
+      case Some(updatedGame) =>
+        game = updatedGame
         notifyObservers(Event.addPlayer)
         saveGame()
-      }
-    } else {
-      notifyObservers(Event.invalidCommand)
+        Try(())
+      case None =>
+        // Note: Event.errPlayerNameExists is currently not represented here anymore
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Cannot add players right now"))
     }
   }
 
@@ -59,6 +64,8 @@ case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface
     } else {
       notifyObservers(invalidCommand)
     }
+    
+    
   }
 
   override def hitPlayer(): Unit = {
