@@ -103,7 +103,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
     "hit next player if can hit" in {
       val deck: Deck = Deck().shuffle
       val player: Player = Player("test", state = PlayerState.Playing)
-      val hand: Hand = player.hand.addCard(deck.draw(0))
+      val hand: Hand = player.hand.addCard(deck.draw.get(0))
       val player_with_hand = Player(name = player.name, hand = hand)
 
       val game1: GameInterface =
@@ -122,7 +122,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
     "not hit next player if game not started" in {
       val deck: Deck = Deck().shuffle
       val player: Player = Player("test", state = PlayerState.Playing)
-      val hand: Hand = player.hand.addCard(deck.draw(0))
+      val hand: Hand = player.hand.addCard(deck.draw.get(0))
       val player_with_hand = Player(name = player.name, hand = hand)
 
       val game1: GameInterface =
