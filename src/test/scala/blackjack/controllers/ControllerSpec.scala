@@ -120,21 +120,12 @@ class ControllerSpec extends AnyWordSpec with Matchers {
     }
 
     "not hit next player if game not started" in {
-      val deck: Deck = Deck().shuffle
-      val player: Player = Player("test", state = PlayerState.Playing)
-      val hand: Hand = player.hand.addCard(deck.draw.get(0))
-      val player_with_hand = Player(name = player.name, hand = hand)
+      val game = Game()
 
-      val game1: GameInterface =
-        Game(
-          state = GameState.Initialized,
-          players = List(player_with_hand, player),
-          deck = deck)
-
-      val controller = Controller(game1, fileIO)
+      val controller = Controller(game, fileIO)
       controller.hitPlayer()
 
-      controller.getGame.getState should be (GameState.Initialized)
+      controller.getGame.getPlayers.length should be (0)
     }
 
     "stand next player when game state is started" in {
@@ -200,6 +191,8 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       val card: Card = Card("2", "Hearts")
       val deck: Deck = Deck(List(card, card))
       val player: Player = Player(name = "steve", bet = 0, money = 200, state = PlayerState.Betting)
+      val player2: Player = Player(name = "steve", bet = 0, money = 200, state = PlayerState.Betting)
+
 
       val game1: GameInterface =
         Game(

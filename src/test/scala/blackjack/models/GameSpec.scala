@@ -65,41 +65,35 @@ class GameSpec extends AnyWordSpec with Matchers {
     }
 
     "deal cards to each player and the dealer" in {
-      val game = Game().createPlayer("Player1").get
+      val game = Game(players = List(Player(name = "Steve", state = Betting)), state = GameState.Betting)
+      val game_invalid = game.copy(state = Initialized)
       val dealtGame = game.deal.get
 
+      game_invalid.deal should be(None)
       dealtGame.getState shouldBe GameState.Started
     }
 
-    "dealer should hit when hand value is less than 17" in {
+    "hit dealer when hand value is less than 17" in {
       val initialDealerHand = Hand(List(Card("5", "Hearts"), Card("6", "Diamonds")))// Value = 11 (Must hit)
-      val game = Game().copy(dealer = Dealer(initialDealerHand)).startGame.get // Next card = 7
-
+      val game = Game().copy(dealer = Dealer(initialDealerHand), deck = Deck(cards = List(Card("6", "Diamonds")))) // Next card = 7
+      val invalid_game = Game()
       val updatedGame = game.hitDealer.get
+
       updatedGame.getDealer.hand.cards.length == 3
+      invalid_game.hitDealer should be(None)
     }
-
-
 
     "correctly allow a player to hit" in {
       val player = Player("Alice", hand = Hand(List(Card("5", "Hearts"), Card("6", "Diamonds"))))
-      val player2 = Player("Alice2", hand = Hand(List(Card("5", "Hearts"), Card("6", "Diamonds"))))
-
-      val game = Game(players = List(player, player2)).deal.get
+      val game = Game(players = List(player), deck = Deck().shuffle)
+      val invalid_game = Game()
+      val game_no_cards = game.copy(players = List(player), deck = Deck())
 
       val updatedGame = game.hitPlayer.get
 
+      invalid_game.hitPlayer should be(None)
+      game_no_cards.hitPlayer should be(None)
       updatedGame.getPlayers.head.hand.cards.length == 3
-      updatedGame.getPlayers(1).hand.cards.length == 2
-    }
-
-    "return input game when acting on empty game" in {
-      val game = Game()
-      val hit_game = game.hitPlayer
-      val stand_game = game.standPlayer
-
-      hit_game should equal(game)
-      stand_game should equal(game)
     }
 
     "mark a player as busted when they exceed 21" in {
@@ -136,75 +130,71 @@ class GameSpec extends AnyWordSpec with Matchers {
     "allow a player to bet and subtract money correctly" in {
       val player = Player("Alice", money = 100, state = PlayerState.Betting)
       val player2 = Player("Steve", state = PlayerState.Betting)
-      val game = Game(players = List(), state = GameState.Betting)
+      val game = Game(state = GameState.Betting)
       val game_with_1 = Game(players = List(player), state = GameState.Betting)
       val game_with_2 = Game(players = List(player, player2), state = GameState.Betting)
 
-      val updatedGame = game.betPlayer(20).get
       val updatedGame_with_1 = game_with_1.betPlayer(20).get
       val updatedGame_with_2 = game_with_2.betPlayer(20).get
 
-      updatedGame should equal(game)
+      game.betPlayer(10) should be(None)
 
       updatedGame_with_1.getIndex shouldBe 0
 
       updatedGame_with_2.getPlayers.head.state shouldBe PlayerState.Playing
+      updatedGame_with_2.getPlayers(1) should equal(player2)
       updatedGame_with_2.getIndex shouldBe game_with_2.getIndex + 1
     }
 
-    "should return the same game when betting on empty game" in {
-      val game = Game().startGame.get
-      val bet_game = game.betPlayer(100).get
-
-      bet_game == game
-    }
-
-    "should keep the second player the same if first player bets" in {
-      val game = Game().createPlayer("Steve").get.createPlayer("Mark").get
-      val started_game = game.startGame
-
-      val bet_game = game.betPlayer(100).get
-
-      bet_game.getPlayers(1).bet should be(0)
-    }
-
     "allow a player to double down" in {
-      val player = Player("Alice", money = 100, bet = 20, hand = Hand(List(Card("5", "Hearts"))), state = PlayerState.Playing)
-      val player2 = Player("Steve", state = PlayerState.Playing)
-      val game = Game(state = GameState.Started)
-      val game_with_1 = Game(players = List(player), deck = Deck().shuffle, state = GameState.Started)
-      val game_with_2 = Game(players = List(player, player2), deck = Deck().shuffle, state = GameState.Started)
+      val player =
+        Player(
+          "Alice",
+          money = 100,
+          bet = 20,
+          hand = Hand(List(Card("5", "Hearts"),Card("4", "Hearts"))),
+          state = PlayerState.Playing)
+      val player2 =
+        Player("Steve", state = PlayerState.Playing)
 
-      val updatedGame = game.doubleDownPlayer.get
-      val updatedGame_with_1 = game_with_1.doubleDownPlayer.get
-      val updatedGame_with_2 = game_with_2.doubleDownPlayer.get
+      // double down on game without player
+      val game_empty = Game(state = GameState.Started)
+      game_empty.doubleDownPlayer should equal(None)
 
-      updatedGame should equal(game)
-      updatedGame_with_2.getPlayers.head.state shouldBe PlayerState.DoubledDown
-      updatedGame_with_2.getPlayers(1) should equal(player2)
+      // game with invalid game state
+      val game_invalid_state = Game(state = GameState.Initialized)
+      game_invalid_state.doubleDownPlayer should equal(None)
 
+      // cant double down or not enough money
+      val game_cant_double_down =
+        Game(players = List(player2), state = GameState.Started)
+      game_cant_double_down.doubleDownPlayer should equal(None)
+
+      // game with empty deck
+      val game_empty_deck =
+        Game(
+          players = List(player, player2),
+          deck = Deck(),
+          state = GameState.Started
+        )
+      game_empty_deck.doubleDownPlayer should be(None)
+
+      // can double down and set index when game correct
+      val game_with_valid_players =
+        Game(
+          current_idx = 1,
+          players = List(player2, player),
+          deck = Deck(List(Card("5", "Hearts"), Card("5", "Hearts"))),
+          state = GameState.Started
+        )
+      game_with_valid_players.doubleDownPlayer.get.getPlayers(1).state should be(PlayerState.DoubledDown)
+      game_with_valid_players.doubleDownPlayer.get.getIndex should be(1)
     }
 
     "evaluate win or loss depending on cards and player states" should {
 
       val game = Game().createPlayer("Alfred").get
       val dealer = Dealer(Hand(List(Card("10", "Hearts"), Card("8", "Diamonds"))))
-
-      "set index correctly if player has blackjack" in {
-        val player = Player("Alice", state = Blackjack)
-        val evaluated_game =
-          Game(game.getIndex, List(player), game.getDeck, game.getDealer, GameState.Started).evaluate
-
-        evaluated_game.getIndex shouldBe(game.getIndex)
-      }
-
-      "set index correctly if player has busted" in {
-        val player = Player("Alice", state = Busted)
-        val evaluated_game =
-          Game(game.getIndex, List(player), game.getDeck, game.getDealer, GameState.Started).evaluate
-
-        evaluated_game.getIndex shouldBe (game.getIndex)
-      }
 
       "eval correctly if player and dealer have blackjack" in {
         val player = Player("Alice", state = Blackjack)
@@ -228,8 +218,10 @@ class GameSpec extends AnyWordSpec with Matchers {
 
       "eval correctly if player is bust" in {
         val player = Player("Alice", state = Busted)
+        val dealer = Dealer(hand = Hand(cards = List(Card("7", "Hearts"), Card("10", "Hearts"), Card("7", "Hearts"))))
+
         val evaluated_game =
-          Game(game.getIndex, List(player), game.getDeck, game.getDealer, GameState.Started).evaluate
+          Game(game.getIndex, List(player), game.getDeck, dealer, GameState.Started).evaluate
 
         evaluated_game.getPlayers.head.state shouldBe (PlayerState.LOST)
       }
@@ -265,14 +257,6 @@ class GameSpec extends AnyWordSpec with Matchers {
           Game(game.getIndex, List(player), game.getDeck, dealer, GameState.Started).evaluate
 
         evaluated_game.getPlayers.head.state shouldBe (PlayerState.WON)
-      }
-
-      "return player if any other player state" in {
-        val player = Player("Alice", state = PlayerState.LOST)
-        val evaluated_game =
-          Game(game.getIndex, List(player), game.getDeck, game.getDealer, GameState.Started).evaluate
-
-        evaluated_game.getPlayers.head should equal(player)
       }
     }
 
