@@ -17,8 +17,8 @@ case class Deck(cards: List[Card] = List.empty) {
   }
 
   // Draws a card from the deck, returning a new deck without the drawn card
-  def draw: (Card, Deck) = cards match {
-    case head :: tail => (head, copy(cards = tail)) // Returns card + new deck
-    case Nil => throw new NoSuchElementException("Deck is empty")
+  def draw: Option[(Card, Deck)] = cards match {
+    case head :: tail => Some((head, copy(cards = tail))) // Returns card + new deck
+    case Nil => None // Deck is empty return nothing
   }
 }

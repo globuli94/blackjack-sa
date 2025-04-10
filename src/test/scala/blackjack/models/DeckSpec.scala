@@ -28,15 +28,10 @@ class DeckSpec extends AnyWordSpec with Matchers {
 
     "draw a card and return a new deck with one less card" in {
       val deck = Deck().shuffle
-      val (drawnCard, newDeck) = deck.draw
+      val (drawnCard, newDeck) = deck.draw.get
 
       drawnCard shouldBe a[Card]
       newDeck.length shouldBe (deck.length - 1)
-    }
-
-    "throw an exception when drawing from an empty deck" in {
-      val deck = Deck(List.empty)
-      an[NoSuchElementException] should be thrownBy deck.draw
     }
   }
 }

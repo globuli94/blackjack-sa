@@ -2,14 +2,16 @@ package controller.controllerComponent
 
 import com.google.inject.Inject
 import controller.ControllerInterface
-import model.ModelInterface
+import model.GameInterface
 import model.modelComponent.GameState
 import util.Event.*
 import util.{Event, FileIOInterface, Observable}
 
-case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+import scala.util.{Failure, Try}
 
-  override def getGame: ModelInterface = game
+case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+
+  override def getGame: GameInterface = game
 
   override def saveGame(): Unit = {
     fileIO.save(game)
@@ -27,29 +29,31 @@ case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface
     saveGame()
   }
 
-  override def startGame(): Unit = {
-    if ((game.getState == GameState.Initialized || game.getState == GameState.Evaluated) && game.getPlayers.nonEmpty) {
-      game = game.startGame
-      notifyObservers(Event.start)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
+  override def startGame(): Try[Unit] = {
+    game.startGame match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.start)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Game can't be started right now"))
     }
   }
 
-  override def addPlayer(name: String): Unit = {
-    if (game.getState == GameState.Initialized || game.getState == GameState.Evaluated) {
-      if(game.getPlayers.exists(_.name == name)) {
-        notifyObservers(Event.errPlayerNameExists)
-      } else {
-        game = game.createPlayer(name)
+  override def addPlayer(name: String): Try[Unit] = {
+    game.createPlayer(name) match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
         notifyObservers(Event.addPlayer)
         saveGame()
-      }
-    } else {
-      notifyObservers(Event.invalidCommand)
+        Try(())
+      case _ =>
+        // Note: Event.errPlayerNameExists is currently not represented here anymore
+        notifyObservers(Event.invalidCommand)
+        Failure(new Exception("Cannot add players right now"))
     }
-
   }
 
   override def leavePlayer(): Unit = {
@@ -62,55 +66,61 @@ case class Controller @Inject (var game: ModelInterface, fileIO: FileIOInterface
     }
   }
 
-  override def hitPlayer(): Unit = {
-    val player = game.getPlayers(game.getIndex)
-    if (player.hand.canHit && game.getState == GameState.Started) {
-      game = game.hitPlayer
-      notifyObservers(Event.hitNextPlayer)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
+  override def hitPlayer(): Try[Unit] = {
+    game.hitPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.hitNextPlayer)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Cannot hit player right now"))
     }
   }
 
-  override def standPlayer(): Unit = {
-    if (game.getState == GameState.Started) {
-      game = game.standPlayer
-      notifyObservers(Event.standNextPlayer)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidCommand)
-    }
-
-  }
-
-  override def doubleDown(): Unit = {
-    val player = game.getPlayers(game.getIndex)
-
-    if (game.getState == GameState.Started && player.hand.canDoubleDown && player.bet <= player.money) {
-      game = game.doubleDownPlayer
-      notifyObservers(Event.doubleDown)
-      saveGame()
-    } else {
-      notifyObservers(Event.invalidBet)
+  override def standPlayer(): Try[Unit] = {
+    game.standPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.standNextPlayer)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Player can't stand right now"))
     }
   }
 
-  override def bet(amount: String): Unit = {
-    if (game.getState == GameState.Betting) {
-      try {
-        if (game.isValidBet(amount.toInt) && amount.toInt > 0) {
-          game = game.betPlayer(amount.toInt)
+  override def doubleDown(): Try[Unit] = {
+    game.doubleDownPlayer match {
+      case Some(updatedGame: GameInterface) =>
+        game = updatedGame
+        notifyObservers(Event.doubleDown)
+        saveGame()
+        Try(())
+      case _ =>
+        notifyObservers(Event.invalidBet)
+        Failure(Exception("Cannot double down right now"))
+    }
+  }
+
+  override def bet(amount: String): Try[Unit] = {
+    try {
+      game.betPlayer(amount.toInt) match {
+        case Some(updatedGame: GameInterface) =>
+          game = updatedGame
           notifyObservers(Event.bet)
           saveGame()
-        } else {
-          notifyObservers(Event.invalidBet)
-        }
-      } catch {
-        case _: NumberFormatException => notifyObservers(Event.invalidCommand)
+          Try(())
+        case _ =>
+          notifyObservers(Event.invalidCommand)
+          Failure(Exception("Invalid bet amount"))
       }
-    } else {
-      notifyObservers(Event.invalidCommand)
+    } catch {
+      case _: NumberFormatException =>
+        notifyObservers(Event.invalidCommand)
+        Failure(Exception("Bet was not integer value"))
     }
   }
 

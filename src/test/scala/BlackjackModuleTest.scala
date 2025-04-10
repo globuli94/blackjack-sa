@@ -1,7 +1,7 @@
 import com.google.inject.*
 import controller.ControllerInterface
 import controller.controllerComponent.Controller
-import model.ModelInterface
+import model.GameInterface
 import model.modelComponent.Game
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -12,7 +12,7 @@ class BlackjackModuleTest extends AnyFlatSpec with Matchers {
   val injector: Injector = Guice.createInjector(new BlackjackModule)
 
   "BlackjackModule" should "bind GameInterface to an instance of Game" in {
-    val game = injector.getInstance(classOf[ModelInterface])
+    val game = injector.getInstance(classOf[GameInterface])
     game shouldBe a[Game]  // Verifying that the instance is of type Game
   }
 

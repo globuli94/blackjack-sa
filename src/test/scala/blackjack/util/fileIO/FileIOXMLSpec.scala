@@ -1,7 +1,7 @@
 package blackjack.util.fileIO
 
 import model.modelComponent.{DealerState, GameState, PlayerState}
-import model.ModelInterface
+import model.GameInterface
 import util.fileIOComponent.XML.FileIOXML
 
 class FileIOXMLSpec extends FileIOTestBase {
@@ -13,7 +13,7 @@ class FileIOXMLSpec extends FileIOTestBase {
   "A FileIOXML Interface" should {
 
     "load a GameInterface from xml" in {
-      val game: ModelInterface = fileIO.load("game_test.xml")
+      val game: GameInterface = fileIO.load("game_test.xml")
 
       game.getState should be (GameState.Started)
     }
@@ -49,10 +49,10 @@ class FileIOXMLSpec extends FileIOTestBase {
     }
 
     "convert a game into xml" in {
-      val game: ModelInterface = fileIO.load("game_test.xml")
+      val game: GameInterface = fileIO.load("game_test.xml")
 
       fileIO.save(game, "game_test.xml")
-      val game_loaded: ModelInterface = fileIO.load("game_test.xml")
+      val game_loaded: GameInterface = fileIO.load("game_test.xml")
 
       game_loaded.getState should be (game.getState)
     }
