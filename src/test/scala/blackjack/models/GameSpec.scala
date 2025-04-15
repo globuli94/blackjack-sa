@@ -2,11 +2,8 @@ package blackjack.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import model.*
 import model.modelComponent.DealerState.Bust
 import model.modelComponent.GameState.{Evaluated, Initialized, Started}
-import model.modelComponent.PlayerState.*
-import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, Hand, Player, PlayerState}
 
 class GameSpec extends AnyWordSpec with Matchers {
 

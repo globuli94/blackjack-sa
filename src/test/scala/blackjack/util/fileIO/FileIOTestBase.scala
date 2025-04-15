@@ -1,12 +1,8 @@
 package blackjack.util.fileIO
 
-import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, Hand, Player, PlayerState}
 import model.GameInterface
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsSuccess, Json}
-import util.fileIOComponent.JSON.FileIOJSON
 
 import scala.io.{BufferedSource, Source}
 

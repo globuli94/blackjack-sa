@@ -1,15 +1,9 @@
 package blackjack.controllers
 
-import controller.ControllerInterface
-import controller.controllerComponent.Controller
-import model.GameInterface
-import model.modelComponent.PlayerState.{Betting, Idle}
-import model.modelComponent.{Card, Deck, Game, GameState, Hand, Player, PlayerState}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers.should
 import util.FileIOInterface
-import util.fileIOComponent.JSON.FileIOJSON
 
 class ControllerSpec extends AnyWordSpec with Matchers {
 

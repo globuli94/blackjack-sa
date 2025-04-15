@@ -1,9 +1,5 @@
 package blackjack.util.fileIO
 
-import model.modelComponent.{DealerState, GameState, PlayerState}
-import model.GameInterface
-import util.fileIOComponent.XML.FileIOXML
-
 class FileIOXMLSpec extends FileIOTestBase {
   val fileIO: FileIOXML = new FileIOXML
   import fileIO.gameStateFromString

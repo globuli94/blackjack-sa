@@ -1,6 +1,5 @@
 package blackjack.models
 
-import model.modelComponent.{Card, Deck}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
