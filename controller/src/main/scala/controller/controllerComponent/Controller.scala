@@ -2,9 +2,10 @@ package controller.controllerComponent
 
 import com.google.inject.Inject
 import controller.ControllerInterface
+import fileIO.FileIOInterface
 import model.GameInterface
 import util.Event.*
-import util.{Event, FileIOInterface, Observable}
+import util.{Event, Observable}
 
 import scala.util.{Failure, Try}
 
