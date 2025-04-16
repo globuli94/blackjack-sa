@@ -6,7 +6,6 @@ import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, H
 import play.api.libs.json.{JsError, JsPath, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 import play.api.libs.functional.syntax.*
 
-import fileIO.FileIOInterface
 import java.io.PrintWriter
 import scala.io.Source
 
