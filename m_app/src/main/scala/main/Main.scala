@@ -1,10 +1,12 @@
+package main
+
 import com.google.inject.{Guice, Injector}
 import controller.ControllerInterface
-
-import scala.io.StdIn.readLine
-import view.TUI.TUI
+import controllerServer.ControllerServer
+import main.BlackjackModule
 import view.GUI.GUI
-import controller.controllerComponent.Server
+import view.TUI.TUI
+import scala.io.StdIn.readLine
 
 
 object Main {
@@ -17,7 +19,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
-    new Thread(() => Server.main(args)).start()
+    new Thread(() => ControllerServer.main(args, injector)).start()
     println("Hello")
 
     var input: String = ""

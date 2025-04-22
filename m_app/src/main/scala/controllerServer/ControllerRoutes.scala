@@ -1,11 +1,12 @@
-package controller.controllerComponent
+package controllerServer
 
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import controller.controllerComponent.Controller
-import javax.inject.Inject
+import com.google.inject.{AbstractModule, Inject}
+import controller.ControllerInterface
+import net.codingwell.scalaguice.ScalaModule
 
-class ControllerRoutes @Inject() (controller: Controller) {
+class ControllerRoutes @Inject() (controller: ControllerInterface) {
 
   val routes: Route =
     pathPrefix("game") {
