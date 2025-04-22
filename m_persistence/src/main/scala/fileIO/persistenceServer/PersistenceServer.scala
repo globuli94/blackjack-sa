@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContextExecutor
 
 object PersistenceServer extends App {
 
-  implicit val system: ActorSystem = ActorSystem("blackjack-controller")
+  implicit val system: ActorSystem = ActorSystem("blackjack-persistence")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val mat: Materializer = Materializer(system)
 

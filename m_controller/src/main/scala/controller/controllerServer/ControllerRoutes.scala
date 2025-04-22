@@ -1,9 +1,11 @@
 package controller.controllerServer
 
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import com.google.inject.Inject
 import controller.ControllerInterface
+import scala.util.{Success, Failure}
 
 class ControllerRoutes @Inject() (controller: ControllerInterface) {
 
@@ -12,56 +14,62 @@ class ControllerRoutes @Inject() (controller: ControllerInterface) {
       concat(
         path("start") {
           post {
-            complete(controller.startGame().toString)
+            controller.startGame() match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("addPlayer" / Segment) { name =>
           post {
-            complete(controller.addPlayer(name).toString)
+            controller.addPlayer(name) match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.BadRequest)
           }
         },
         path("hit") {
           post {
-            complete(controller.hitPlayer().toString)
+            controller.hitPlayer() match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.BadRequest)
           }
         },
         path("stand") {
           post {
-            complete(controller.standPlayer().toString)
+            controller.standPlayer() match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.BadRequest)
           }
         },
         path("doubleDown") {
           post {
-            complete(controller.doubleDown().toString)
+            controller.doubleDown() match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.BadRequest)
           }
         },
         path("bet" / Segment) { amount =>
           post {
-            complete(controller.bet(amount).toString)
+            controller.bet(amount) match
+              case Success(_) => complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.BadRequest)
           }
         },
         path("leave") {
           post {
-            complete {
-              controller.leavePlayer()
-              "Player left"
-            }
+            controller.leavePlayer()
+            complete(StatusCodes.OK)
           }
         },
         path("save") {
           post {
-            complete {
-              controller.saveGame()
-              "Game saved"
-            }
+            controller.saveGame()
+            complete(StatusCodes.OK)
           }
         },
         path("load") {
           post {
-            complete {
-              controller.loadGame()
-              "Game loaded"
-            }
+            controller.loadGame()
+            complete(StatusCodes.OK)
           }
         },
         path("state") {
