@@ -9,6 +9,7 @@ trait ControllerInterface extends Observable {
   def loadGame(): Unit
   def saveGame(): Unit
   def getGame: GameInterface
+  def setGame(other: GameInterface): Unit
   def initializeGame(): Unit
   def startGame(): Try[Unit]
   def addPlayer(name: String): Try[Unit]

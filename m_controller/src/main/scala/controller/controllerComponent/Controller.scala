@@ -13,6 +13,11 @@ case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface)
 
   override def getGame: GameInterface = game
 
+  override def setGame(other: GameInterface): Unit = {
+    game = other
+    notifyObservers(Event.load)
+  }
+
   override def saveGame(): Unit = {
     fileIO.save(game)
     notifyObservers(Event.save)

@@ -4,8 +4,10 @@ import com.google.inject.{Guice, Injector}
 import controller.ControllerInterface
 import controllerServer.ControllerServer
 import main.BlackjackModule
+import persistenceServer.PersistenceServer
 import view.GUI.GUI
 import view.TUI.TUI
+
 import scala.io.StdIn.readLine
 
 
@@ -20,7 +22,7 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     new Thread(() => ControllerServer.main(args, injector)).start()
-    println("Hello")
+    new Thread(() => PersistenceServer.main(args, injector)).start()
 
     var input: String = ""
 
