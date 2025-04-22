@@ -1,7 +1,6 @@
 package util.fileIO
 
 import fileIO.fileIOComponent.XML.FileIOXML
-import model.GameInterface
 import model.modelComponent.{DealerState, GameState, PlayerState}
 
 class FileIOXMLSpec extends FileIOTestBase {

@@ -2,14 +2,13 @@ package controller.controllerComponent
 
 import com.google.inject.Inject
 import controller.ControllerInterface
-import fileIO.FileIOInterface
-import model.GameInterface
-import util.Event.*
-import util.{Event, Observable}
+import controller.util.{Event, Observable}
+import model.{GameFactoryInterface, GameInterface}
+import persistence.FileIOInterface
 
 import scala.util.{Failure, Try}
 
-case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+case class Controller @Inject (var game: GameInterface, gameFactory: GameFactoryInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
 
   override def getGame: GameInterface = game
 
@@ -19,12 +18,12 @@ case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface)
   }
 
   override def saveGame(): Unit = {
-    fileIO.save(game)
+    fileIO.save(gameFactory, game)
     notifyObservers(Event.save)
   }
 
   override def loadGame(): Unit = {
-    game = fileIO.load()
+    game = fileIO.load(gameFactory)
     notifyObservers(Event.load)
   }
 
@@ -67,7 +66,7 @@ case class Controller @Inject (var game: GameInterface, fileIO: FileIOInterface)
         notifyObservers(Event.leavePlayer)
         saveGame()
     } else {
-      notifyObservers(invalidCommand)
+      notifyObservers(Event.invalidCommand)
     }
   }
 

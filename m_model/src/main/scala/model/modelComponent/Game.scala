@@ -1,19 +1,14 @@
 package model.modelComponent
 
 import com.google.inject.Inject
-import model.GameInterface
-import java.util.Optional
-
-enum GameState {
-  case Initialized, Betting, Started, Evaluated
-}
+import model.{Card, Dealer, DealerState, Deck, GameInterface, GameState, Hand, Player, PlayerState}
 
 case class Game @Inject() (
-                 current_idx: Int = 0,
-                 players: List[Player] = List.empty,
-                 deck: Deck = Deck(),
-                 dealer: Dealer = Dealer(),
-                 state: GameState = GameState.Initialized
+                            current_idx: Int = 0,
+                            players: List[Player] = List.empty,
+                            deck: Deck = Deck(),
+                            dealer: Dealer = Dealer(),
+                            state: GameState = GameState.Initialized
                           ) extends GameInterface {
 
   override def getIndex: Int = current_idx

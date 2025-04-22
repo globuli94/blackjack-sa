@@ -1,6 +1,8 @@
 package model
 
-import model.modelComponent.{Dealer, Deck, GameState, Player}
+enum GameState {
+  case Initialized, Betting, Started, Evaluated
+}
 
 trait GameInterface {
 
@@ -23,4 +25,8 @@ trait GameInterface {
   def startGame: Option[GameInterface]
   def getPlayerOptions: List[String]
   def toString: String
+}
+
+trait GameFactoryInterface {
+  def apply(idx: Int, players: List[Player], deck: Deck, dealer: Dealer, state: GameState): GameInterface
 }

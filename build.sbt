@@ -1,6 +1,12 @@
 ThisBuild / scalaVersion := "3.3.1"
 
+lazy val interfaces = (project in file("m_interfaces"))
+  .settings(
+    name := "m_interfaces"
+  )
+
 lazy val model = (project in file("m_model"))
+  .dependsOn(interfaces)
   .settings(
     name := "m_model",
     libraryDependencies ++= Seq(
@@ -18,11 +24,13 @@ lazy val model = (project in file("m_model"))
   )
 
 lazy val persistence = (project in file("m_persistence"))
-  .dependsOn(model)
+  .dependsOn(interfaces)
   .settings(
     name := "m_persistence",
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %% "scala-xml" % "2.3.0",
+      "net.codingwell" %% "scala-guice" % "7.0.0",
+      "com.google.inject" % "guice" % "7.0.0",
       "com.typesafe.play" %% "play-json" % "2.10.5",
       "org.scalameta" %% "munit" % "1.0.0" % Test,
       "org.scalatest" %% "scalatest" % "3.2.18" % Test,
@@ -36,8 +44,7 @@ lazy val persistence = (project in file("m_persistence"))
   )
 
 lazy val controller = (project in file("m_controller"))
-  .dependsOn(model)
-  .dependsOn(persistence)
+  .dependsOn(interfaces)
   .settings(
     name := "m_controller",
     libraryDependencies ++= Seq(
@@ -55,7 +62,7 @@ lazy val controller = (project in file("m_controller"))
   )
 
 lazy val ai = (project in file("m_ai"))
-  .dependsOn(model)
+  .dependsOn(interfaces)
   .settings(
     name := "m_ai",
     libraryDependencies ++= Seq(
@@ -73,7 +80,7 @@ lazy val ai = (project in file("m_ai"))
   )
 
 lazy val ui = (project in file("m_ui"))
-  .dependsOn(model, controller)
+  .dependsOn(interfaces)
   .settings(
     name := "m_ui",
     libraryDependencies ++= Seq(
@@ -90,7 +97,7 @@ lazy val ui = (project in file("m_ui"))
   )
 
 lazy val app = (project in file("m_app"))
-  .dependsOn(model, controller, persistence, ai, ui)
+  .dependsOn(interfaces, model, controller, persistence, ai, ui)
   .settings(
     name := "m_app",
     libraryDependencies ++= Seq(
@@ -108,7 +115,7 @@ lazy val app = (project in file("m_app"))
   )
 
 lazy val root = (project in file("."))
-  .aggregate(model, persistence, controller, ai, ui, app)
+  .aggregate(interfaces, model, persistence, controller, ai, ui, app)
   .settings(
     name := "blackjack",
     Compile / run := (app / Compile / run).evaluated

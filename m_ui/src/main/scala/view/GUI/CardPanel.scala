@@ -1,13 +1,12 @@
 package view.GUI
 
-import model.modelComponent.Card
-
 import java.awt.image.BufferedImage
 import java.awt.{Graphics2D, Image}
 import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import scala.swing.*
+import model.Card
 
 class CardPanel(card: Card, scalePercent: Double = 0.5) extends Label {
   background = new Color(0x0e5932)

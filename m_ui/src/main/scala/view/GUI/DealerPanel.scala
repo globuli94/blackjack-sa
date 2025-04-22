@@ -1,9 +1,7 @@
 package view.GUI
 
-import model.modelComponent.{Card, Dealer}
-import model.modelComponent.DealerState.{Bust, Dealing, Idle, Standing}
 import view.GUI.CardPanel
-
+import model.{Dealer, Card, DealerState}
 import java.awt.Color
 import java.net.URL
 import javax.swing.{BorderFactory, ImageIcon}
@@ -66,9 +64,9 @@ class DealerPanel(dealer: Dealer) extends BoxPanel(Orientation.Vertical) {
       val state_label: Label =
         if (dealer.hand.hasBlackjack)
           Label(s"BLACKJACK - ${dealer.hand.getHandValue}")
-        else if (dealer.state == Bust)
+        else if (dealer.state == DealerState.Bust)
           Label(s"${dealer.state} - ${dealer.hand.getHandValue}")
-        else if(dealer.state != Bust)
+        else if(dealer.state != DealerState.Bust)
           Label(s"Value: ${dealer.hand.getHandValue}")
         else
           Label()

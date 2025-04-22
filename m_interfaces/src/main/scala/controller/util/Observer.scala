@@ -1,4 +1,4 @@
-package util
+package controller.util
 
 trait Observer {
   def update(e: Event): Unit

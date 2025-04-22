@@ -1,4 +1,4 @@
-package model.modelComponent
+package model
 
 case class Card(rank: String, suit: String) {
 

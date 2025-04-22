@@ -1,4 +1,4 @@
-package model.modelComponent
+package model
 
 enum PlayerState { case Playing, Standing, DoubledDown, Busted, Blackjack, WON, LOST, Betting, Idle, Split }
 

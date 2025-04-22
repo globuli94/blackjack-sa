@@ -1,12 +1,7 @@
 package fileIO.fileIOComponent.XML
 
-import model.GameInterface
-import model.modelComponent.GameState.{Evaluated, Initialized, Started}
-
-import model.modelComponent.PlayerState.*
-import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, Hand, Player, PlayerState}
-
-import fileIO.FileIOInterface
+import model.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
+import persistence.FileIOInterface
 
 import scala.xml.{Elem, Node, NodeSeq, PrettyPrinter, XML}
 
@@ -14,16 +9,16 @@ class FileIOXML extends FileIOInterface {
 
   // PLAYER STATE
   def playerStateFromString(state: String): PlayerState = state match {
-    case "Playing" => Playing
-    case "Standing" => Standing
-    case "DoubledDown" => DoubledDown
-    case "Busted" => Busted
-    case "Blackjack" => Blackjack
-    case "WON" => WON
-    case "LOST" => LOST
-    case "Betting" => Betting
-    case "Idle" => Idle
-    case "Split" => Split
+    case "Playing" => PlayerState.Playing
+    case "Standing" => PlayerState.Standing
+    case "DoubledDown" => PlayerState.DoubledDown
+    case "Busted" => PlayerState.Busted
+    case "Blackjack" => PlayerState.Blackjack
+    case "WON" => PlayerState.WON
+    case "LOST" => PlayerState.LOST
+    case "Betting" => PlayerState.Betting
+    case "Idle" => PlayerState.Idle
+    case "Split" => PlayerState.Split
     case _ => throw new IllegalArgumentException("Invalid PlayerState")
   }
 
@@ -38,10 +33,10 @@ class FileIOXML extends FileIOInterface {
 
   // GAME STATE
   def gameStateFromString(state: String): GameState = state match {
-    case "Initialized" => Initialized
+    case "Initialized" => GameState.Initialized
     case "Betting" => GameState.Betting
-    case "Started" => Started
-    case "Evaluated" => Evaluated
+    case "Started" => GameState.Started
+    case "Evaluated" => GameState.Evaluated
     case _ => throw new IllegalArgumentException("Invalid GameState")
   }
 
@@ -132,21 +127,21 @@ class FileIOXML extends FileIOInterface {
     </game>
   }
 
-  private def gameFromXML(node: Node): GameInterface = {
+  private def gameFromXML(node: Node, gameFactory: GameFactoryInterface): GameInterface = {
     val idx = (node \ "current_idx").text.toInt
     val players = (node \ "players" \ "player").map(playerFromXML).toList
     val deck = deckFromXML((node \ "deck").head)
     val dealer = dealerFromXML((node \ "dealer").head)
     val state = gameStateFromString((node \ "state").text)
-    Game(idx, players, deck, dealer, state)
+    gameFactory(idx, players, deck, dealer, state)
   }
 
-  override def load(path: String = "game.xml"): GameInterface = {
+  override def load(gameFactory: GameFactoryInterface, path: String = "game.json"): GameInterface = {
     val source = XML.loadFile(path)
-    gameFromXML(source)
+    gameFromXML(source, gameFactory)
   }
 
-  override def save(game: GameInterface, path: String = "game.xml"): Unit = {
+  override def save(gameFactory: GameFactoryInterface, game: GameInterface, path: String = "game.json"): Unit = {
     val xml = gameToXML(game)
     val prettyPrinter = new PrettyPrinter(120, 4)
     val prettyXml = prettyPrinter.format(xml)

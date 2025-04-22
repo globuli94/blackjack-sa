@@ -1,8 +1,7 @@
 package view.GUI
 
-import model.modelComponent.{Card, Player}
-import model.modelComponent.PlayerState.{Betting, Idle, Playing, Standing}
 import view.GUI.CardPanel
+import model.{Card, Player, PlayerState}
 
 import java.awt.Color
 import java.net.URL
@@ -97,11 +96,11 @@ class PlayerPanel(player: Player, active: Boolean) extends BoxPanel(Orientation.
     contents += new BoxPanel(Orientation.Horizontal) {
       background = poolTableGreen
       val state_label: Label =
-        if(player.state == Playing)
+        if(player.state == PlayerState.Playing)
           if(player.hand.cards.nonEmpty) Label(s"Value: ${player.hand.getHandValue}") else Label()
-        else if(player.state == Standing)
+        else if(player.state == PlayerState.Standing)
           Label(s"Standing on: ${player.hand.getHandValue}")
-        else if(player.state == Betting || player.state == Idle )
+        else if(player.state == PlayerState.Betting || player.state == PlayerState.Idle )
           Label("")
         else
           Label(s"${player.state} ${player.hand.getHandValue}")

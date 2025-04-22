@@ -1,6 +1,6 @@
 package models
 
-import model.modelComponent.{Card, Dealer, DealerState, Hand}
+import model.modelComponent.{Dealer, DealerState}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 

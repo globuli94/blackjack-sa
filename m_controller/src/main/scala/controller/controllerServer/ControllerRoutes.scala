@@ -1,10 +1,9 @@
-package controllerServer
+package controller.controllerServer
 
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import com.google.inject.{AbstractModule, Inject}
+import com.google.inject.Inject
 import controller.ControllerInterface
-import net.codingwell.scalaguice.ScalaModule
 
 class ControllerRoutes @Inject() (controller: ControllerInterface) {
 

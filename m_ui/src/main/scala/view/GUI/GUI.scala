@@ -1,8 +1,8 @@
 package view.GUI
 
 import controller.ControllerInterface
-import model.modelComponent.{GameState, Player}
-import util.{Event, Observer}
+import controller.util.{Event, Observer}
+import model.{GameState, Player}
 import view.GUI.{ControlPanel, DealerPanel}
 
 import java.awt.{Color, Font, Graphics2D, RenderingHints}

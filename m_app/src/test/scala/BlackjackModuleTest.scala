@@ -1,8 +1,6 @@
 import com.google.inject.*
-import controller.ControllerInterface
 import controller.controllerComponent.Controller
 import main.BlackjackModule
-import model.GameInterface
 import model.modelComponent.Game
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers

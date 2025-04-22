@@ -2,9 +2,8 @@ package main
 
 import com.google.inject.{Guice, Injector}
 import controller.ControllerInterface
-import controllerServer.ControllerServer
-import main.BlackjackModule
-import persistenceServer.PersistenceServer
+import controller.controllerServer.ControllerServer
+import fileIO.persistenceServer.PersistenceServer
 import view.GUI.GUI
 import view.TUI.TUI
 

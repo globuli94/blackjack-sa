@@ -1,11 +1,8 @@
 package controllers
 
-import controller.ControllerInterface
 import controller.controllerComponent.Controller
-import fileIO.FileIOInterface
 import fileIO.fileIOComponent.JSON.FileIOJSON
-import model.GameInterface
-import model.modelComponent.{Card, Deck, Game, GameState, Hand, Player, PlayerState}
+import model.modelComponent.{Game, GameState, Player, PlayerState}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers.should

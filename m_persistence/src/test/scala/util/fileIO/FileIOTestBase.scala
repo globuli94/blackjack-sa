@@ -1,6 +1,5 @@
 package util.fileIO
 
-import model.GameInterface
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

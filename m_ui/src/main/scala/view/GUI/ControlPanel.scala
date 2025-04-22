@@ -1,9 +1,7 @@
 package view.GUI
 
 import controller.ControllerInterface
-import model.modelComponent.GameState.{Betting, Evaluated, Initialized}
-import model.modelComponent.{GameState, Player}
-import util.{Event, Observer}
+import model.{GameState, Player}
 
 import java.awt.Color
 import javax.swing.BorderFactory

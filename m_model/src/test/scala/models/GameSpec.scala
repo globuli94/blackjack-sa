@@ -2,7 +2,7 @@ package models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import model.modelComponent.{Card, Dealer, DealerState, Deck, Game, GameState, Hand, Player, PlayerState}
+import model.modelComponent.{Dealer, DealerState, Game, GameState, Player, PlayerState}
 import model.modelComponent.GameState.{Evaluated, Initialized, Started}
 import model.modelComponent.PlayerState.{Betting, Blackjack, Busted, DoubledDown, Playing, Standing}
 
