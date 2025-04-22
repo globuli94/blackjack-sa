@@ -23,35 +23,35 @@ class ControllerRoutes @Inject() (controller: ControllerInterface) {
           post {
             controller.addPlayer(name) match
               case Success(_) => complete(StatusCodes.OK)
-              case Failure(_) => complete(StatusCodes.BadRequest)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("hit") {
           post {
             controller.hitPlayer() match
               case Success(_) => complete(StatusCodes.OK)
-              case Failure(_) => complete(StatusCodes.BadRequest)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("stand") {
           post {
             controller.standPlayer() match
               case Success(_) => complete(StatusCodes.OK)
-              case Failure(_) => complete(StatusCodes.BadRequest)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("doubleDown") {
           post {
             controller.doubleDown() match
               case Success(_) => complete(StatusCodes.OK)
-              case Failure(_) => complete(StatusCodes.BadRequest)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("bet" / Segment) { amount =>
           post {
             controller.bet(amount) match
               case Success(_) => complete(StatusCodes.OK)
-              case Failure(_) => complete(StatusCodes.BadRequest)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
           }
         },
         path("leave") {
