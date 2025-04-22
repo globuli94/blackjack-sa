@@ -4,7 +4,6 @@ import controller.ControllerInterface
 import scala.io.StdIn.readLine
 import view.TUI.TUI
 import view.GUI.GUI
-import controller.controllerComponent.Server
 
 
 object Main {
@@ -16,9 +15,6 @@ object Main {
   print(controller.toString)
 
   def main(args: Array[String]): Unit = {
-
-    new Thread(() => Server.main(args)).start()
-    println("Hello")
 
     var input: String = ""
 
