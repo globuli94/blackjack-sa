@@ -1,11 +1,14 @@
 package view.GUI
 
 import view.GUI.CardPanel
-import model.{Dealer, Card, DealerState}
+
 import java.awt.Color
 import java.net.URL
 import javax.swing.{BorderFactory, ImageIcon}
 import scala.swing.*
+
+import model.modelComponent.{Dealer, Card, DealerState}
+
 
 class DealerPanel(dealer: Dealer) extends BoxPanel(Orientation.Vertical) {
   preferredSize = new Dimension(235, 280)

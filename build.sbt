@@ -1,12 +1,6 @@
 ThisBuild / scalaVersion := "3.3.1"
 
-lazy val interfaces = (project in file("m_interfaces"))
-  .settings(
-    name := "m_interfaces"
-  )
-
 lazy val model = (project in file("m_model"))
-  .dependsOn(interfaces)
   .settings(
     name := "m_model",
     libraryDependencies ++= Seq(
@@ -24,7 +18,7 @@ lazy val model = (project in file("m_model"))
   )
 
 lazy val persistence = (project in file("m_persistence"))
-  .dependsOn(interfaces)
+  .dependsOn(model)
   .settings(
     name := "m_persistence",
     libraryDependencies ++= Seq(
@@ -44,7 +38,7 @@ lazy val persistence = (project in file("m_persistence"))
   )
 
 lazy val controller = (project in file("m_controller"))
-  .dependsOn(interfaces)
+  .dependsOn(model, persistence)
   .settings(
     name := "m_controller",
     libraryDependencies ++= Seq(
@@ -62,7 +56,7 @@ lazy val controller = (project in file("m_controller"))
   )
 
 lazy val ai = (project in file("m_ai"))
-  .dependsOn(interfaces)
+  .dependsOn(model)
   .settings(
     name := "m_ai",
     libraryDependencies ++= Seq(
@@ -80,7 +74,7 @@ lazy val ai = (project in file("m_ai"))
   )
 
 lazy val ui = (project in file("m_ui"))
-  .dependsOn(interfaces)
+  .dependsOn(model, controller)
   .settings(
     name := "m_ui",
     libraryDependencies ++= Seq(
@@ -97,7 +91,7 @@ lazy val ui = (project in file("m_ui"))
   )
 
 lazy val app = (project in file("m_app"))
-  .dependsOn(interfaces, model, controller, persistence, ai, ui)
+  .dependsOn(model, controller, persistence, ai, ui)
   .settings(
     name := "m_app",
     libraryDependencies ++= Seq(
@@ -115,7 +109,7 @@ lazy val app = (project in file("m_app"))
   )
 
 lazy val root = (project in file("."))
-  .aggregate(interfaces, model, persistence, controller, ai, ui, app)
+  .aggregate(model, persistence, controller, ai, ui, app)
   .settings(
     name := "blackjack",
     Compile / run := (app / Compile / run).evaluated

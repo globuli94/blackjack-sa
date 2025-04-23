@@ -3,8 +3,8 @@ package controller.controllerComponent
 import com.google.inject.Inject
 import controller.ControllerInterface
 import controller.util.{Event, Observable}
-import model.{GameFactoryInterface, GameInterface}
-import persistence.FileIOInterface
+import fileIO.fileIOComponent.FileIOInterface
+import model.modelComponent.{GameFactoryInterface, GameInterface}
 
 import scala.util.{Failure, Try}
 

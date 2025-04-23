@@ -1,7 +1,8 @@
 package view.GUI
 
 import controller.ControllerInterface
-import model.{GameState, Player}
+
+import model.modelComponent.{Player, GameState}
 
 import java.awt.Color
 import javax.swing.BorderFactory

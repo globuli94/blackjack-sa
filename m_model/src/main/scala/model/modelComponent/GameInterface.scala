@@ -1,4 +1,4 @@
-package model
+package model.modelComponent
 
 enum GameState {
   case Initialized, Betting, Started, Evaluated

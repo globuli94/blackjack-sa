@@ -1,9 +1,10 @@
 package fileIO.fileIOComponent.XML
 
-import model.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
-import persistence.FileIOInterface
+import fileIO.fileIOComponent.FileIOInterface
 
 import scala.xml.{Elem, Node, NodeSeq, PrettyPrinter, XML}
+import model.modelComponent.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
+
 
 class FileIOXML extends FileIOInterface {
 

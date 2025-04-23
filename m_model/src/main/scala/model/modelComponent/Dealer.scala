@@ -1,4 +1,4 @@
-package model
+package model.modelComponent
 
 enum DealerState { case Idle, Dealing, Bust, Standing }
 

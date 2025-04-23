@@ -1,7 +1,7 @@
 package controller
 
-import model.GameInterface
-import util.Observable
+import controller.util.Observable
+import model.modelComponent.GameInterface
 
 import scala.util.Try
 

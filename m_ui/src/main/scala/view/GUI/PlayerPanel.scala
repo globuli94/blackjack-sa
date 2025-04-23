@@ -1,12 +1,13 @@
 package view.GUI
 
 import view.GUI.CardPanel
-import model.{Card, Player, PlayerState}
 
 import java.awt.Color
 import java.net.URL
 import javax.swing.{BorderFactory, ImageIcon}
 import scala.swing.*
+import model.modelComponent.{Player, Card, PlayerState}
+
 
 class PlayerPanel(player: Player, active: Boolean) extends BoxPanel(Orientation.Vertical) {
   preferredSize = if(player.hand.cards.nonEmpty) new Dimension(235, 250) else new Dimension(235, 150)

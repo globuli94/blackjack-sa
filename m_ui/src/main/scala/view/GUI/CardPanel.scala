@@ -6,7 +6,9 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import scala.swing.*
-import model.Card
+
+import model.modelComponent.{Card, GameState}
+
 
 class CardPanel(card: Card, scalePercent: Double = 0.5) extends Label {
   background = new Color(0x0e5932)
@@ -30,7 +32,6 @@ class CardPanel(card: Card, scalePercent: Double = 0.5) extends Label {
 
   // Function to resize image by percentage
   private def resizeImage(path: String, scale: Double): ImageIcon = {
-    println(path)
     val imageUrl = getClass.getResource(path)
     if (imageUrl == null) {
       throw new RuntimeException(s"Image not found at path: $path")

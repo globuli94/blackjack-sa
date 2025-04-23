@@ -1,4 +1,4 @@
-package model
+package model.modelComponent
 
 import scala.util.Random
 

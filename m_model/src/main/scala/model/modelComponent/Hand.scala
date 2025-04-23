@@ -1,4 +1,4 @@
-package model
+package model.modelComponent
 
 // handles adding cards to hand and value logic -> bust, blackjack
 case class Hand(cards: List[Card] = List.empty) {

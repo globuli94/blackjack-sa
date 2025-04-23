@@ -1,7 +1,7 @@
 package fileIO.fileIOComponent.JSON
 
-import model.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
-import persistence.FileIOInterface
+import fileIO.fileIOComponent.FileIOInterface
+import model.modelComponent.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
 import play.api.libs.json.{JsError, JsPath, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 import play.api.libs.functional.syntax.*
 

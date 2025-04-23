@@ -2,8 +2,8 @@ package main
 
 import com.google.inject.{Guice, Injector}
 import controller.ControllerInterface
-import controller.controllerServer.ControllerServer
-import fileIO.persistenceServer.PersistenceServer
+import controllerServer.ControllerServer
+import persistenceServer.PersistenceServer
 import view.GUI.GUI
 import view.TUI.TUI
 

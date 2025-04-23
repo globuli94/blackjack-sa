@@ -1,7 +1,6 @@
-package persistence
+package fileIO.fileIOComponent
 
-import model.{GameFactoryInterface, GameInterface}
-
+import model.modelComponent.{GameFactoryInterface, GameInterface}
 
 trait FileIOInterface {
   def load(gameFactory: GameFactoryInterface, path: String = ""): GameInterface

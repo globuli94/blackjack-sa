@@ -5,11 +5,10 @@ import controller.ControllerInterface
 import controller.controllerComponent.Controller
 import fileIO.fileIOComponent.JSON.FileIOJSON
 import fileIO.fileIOComponent.XML.FileIOXML
-import model.{GameFactoryInterface, GameInterface}
 import controller.ControllerInterface
-import model.modelComponent.{Game, GameFactory}
+import fileIO.fileIOComponent.FileIOInterface
+import model.modelComponent.{Game, GameFactory, GameFactoryInterface, GameInterface}
 import net.codingwell.scalaguice.ScalaModule
-import persistence.FileIOInterface
 
 class BlackjackModule extends AbstractModule with ScalaModule {
   override def configure(): Unit =
