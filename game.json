@@ -3,13 +3,13 @@
     <current_idx>0</current_idx>
     <players>
         <player>
-            <name>Marko</name>
+            <name>Lukas</name>
             <hand>
                 <cards> </cards>
             </hand>
             <money>1000</money>
             <bet>0</bet>
-            <state>Idle</state>
+            <state>Betting</state>
         </player>
     </players>
     <deck>
@@ -23,5 +23,5 @@
             <state>Idle</state>
         </dealer>
     </dealer>
-    <state>Initialized</state>
+    <state>Betting</state>
 </game>
