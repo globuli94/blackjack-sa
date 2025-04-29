@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  game_service:
+    build:
+      context: ./s_gameService
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - blackjack_network
+
+  tui_service:
+    build:
+      context: ./s_tuiService
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - blackjack_network
+
+networks:
+  blackjack_network:
+    driver: bridge
