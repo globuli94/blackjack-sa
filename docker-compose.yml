@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    networks:
-      - blackjack_network
 
   tui_service:
     build:
@@ -16,9 +14,5 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    networks:
-      - blackjack_network
-
-networks:
-  blackjack_network:
-    driver: bridge
+    stdin_open: true  # keeps terminal open for tui
+    tty: true

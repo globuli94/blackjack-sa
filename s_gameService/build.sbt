@@ -59,6 +59,5 @@ lazy val s_gameService = (project in file("."))
   .aggregate(model, controller, persistence)
   .settings(
     name := "s_gameService",
-    mainClass:= Some("ControllerServer"),
     Compile / run := (controller / Compile / run).evaluated
   )

@@ -23,7 +23,7 @@ object ControllerServer {
 
     binding.onComplete {
       case scala.util.Success(binding) =>
-        println(s"Game server started at http://localhost:8080/")
+        println(s"Game server started at http://0.0.0.0:8080/")
       case scala.util.Failure(exception) =>
         println(s"Failed to bind server: ${exception.getMessage}")
         system.terminate()

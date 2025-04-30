@@ -4,13 +4,12 @@ import scala.io.StdIn
 import scala.util.{Try, Success, Failure}
 
 object TUIApp {
-  val baseUrl = "http://0.0.0.0:8080/game"
+  val baseUrl = "http://game_service:8080/game"
 
   def main(args: Array[String]): Unit = {
-    println("=== Blackjack TUI ===")
-    println("Type a command (start, addPlayer <name>, bet <amount>, hit, stand, doubleDown, leave, save, load, state, quit)")
-
     var running = true
+
+    post("/state")
 
     while (running) {
       print("\n> ")
@@ -26,7 +25,7 @@ object TUIApp {
         val tokens = trimmed.split("\\s+").toList
 
         tokens match {
-          case "quit" :: Nil =>
+          case "exit" :: Nil =>
             running = false
 
           case "start" :: Nil =>
@@ -71,7 +70,7 @@ object TUIApp {
   def get(endpoint: String): Unit = {
     Try(requests.get(s"$baseUrl$endpoint")) match {
       case Success(response) =>
-        println(s"\n--- Game State ---\n${response.text()}")
+        println(response.text())
       case Failure(exception) =>
         println(s"GET request failed: ${exception.getMessage}")
     }
@@ -81,8 +80,10 @@ object TUIApp {
     Try(requests.post(s"$baseUrl$endpoint")) match {
       case Success(response) =>
         println(s"Action success: ${response.statusCode}")
+        get("/state")
       case Failure(exception) =>
         println(s"POST request failed: ${exception.getMessage}")
+        get("/state")
     }
   }
 }
