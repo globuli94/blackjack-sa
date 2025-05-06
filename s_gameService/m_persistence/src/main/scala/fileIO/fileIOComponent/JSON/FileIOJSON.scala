@@ -9,7 +9,7 @@ import java.io.PrintWriter
 import scala.io.Source
 
 
-class FileIOJSON extends FileIOInterface {
+class  FileIOJSON extends FileIOInterface {
 
   // PLAYER STATE
   implicit val playerStateReads: Reads[PlayerState] = Reads[PlayerState] {

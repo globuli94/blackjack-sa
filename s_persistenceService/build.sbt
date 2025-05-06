@@ -1,19 +1,36 @@
 ThisBuild / scalaVersion := "3.3.1"
 
-lazy val tui = (project in file("m_tui"))
+lazy val validation = (project in file("m_validation"))
   .settings(
-    name := "m_tui",
+    name := "m_validation",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %% "requests" % "0.8.0",        // HTTP client for making GET requests
-      "io.circe" %% "circe-core" % "0.14.6",        // JSON encoding/decoding (for JSON parsing)
-      "io.circe" %% "circe-generic" % "0.14.6",     // Automatic derivation of case classes
-      "io.circe" %% "circe-parser" % "0.14.6"       // JSON parsing
+      "com.lihaoyi" %% "requests" % "0.8.0",
+      "com.typesafe.play" %% "play-json" % "2.10.4"
+    )
+  )
+
+lazy val persistence = (project in file("m_persistence"))
+  .dependsOn(validation)
+  .settings(
+    name := "m_persistence",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "requests" % "0.8.0",
+      "com.typesafe.play" %% "play-json" % "2.10.4",
+      "com.typesafe.akka" %% "akka-stream" % "2.8.8",
+      "com.typesafe.akka" %% "akka-http" % "10.5.3",
+      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8",
+      "com.typesafe.slick" %% "slick" % "3.5.2",
+      "com.typesafe.slick" %% "slick-hikaricp" % "3.5.2",
+      "org.slf4j" % "slf4j-api" % "1.7.36",
+      "org.slf4j" % "slf4j-simple" % "1.7.36",
+      "org.postgresql" % "postgresql" % "42.3.3",
     )
   )
 
 lazy val root = (project in file("."))
-  .aggregate(tui)
+  .aggregate(validation)
+  .aggregate(persistence)
   .settings(
     name := "s_persistenceService",
-    Compile / run := (tui / Compile / run).evaluated
+    Compile / run := (persistence / Compile / run).evaluated
   )

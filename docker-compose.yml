@@ -16,3 +16,17 @@ services:
       - "8081:8081"
     stdin_open: true  # keeps terminal open for tui
     tty: true
+
+  postgres_service:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blackjack
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+
