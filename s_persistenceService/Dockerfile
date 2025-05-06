@@ -1,21 +1,21 @@
-# Use an official sbt + Scala + JDK image
+# Verwende ein offizielles sbt + Scala + JDK-Image
 FROM sbtscala/scala-sbt:eclipse-temurin-17.0.4_1.7.1_3.2.0
 
-# Set the working directory
-WORKDIR /gameTUIService
+# Setze das Arbeitsverzeichnis
+WORKDIR /persistenceService
 
-# Copy only build files first (to leverage Docker cache)
+# Kopiere nur die Build-Dateien zuerst (um Docker-Cache zu nutzen)
 COPY build.sbt ./
 COPY project ./project
 
 # Trigger dependency resolution early
 RUN sbt update
 
-# Now copy the rest of the source code
+# Jetzt den restlichen Quellcode kopieren
 COPY . .
 
-# Optional: pre-compile
+# Optional: Kompiliere das Projekt vorab
 RUN sbt compile
 
-# Default command
+# Standardbefehl zum Starten des Containers
 CMD ["sbt", "run"]

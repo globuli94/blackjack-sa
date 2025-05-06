@@ -17,6 +17,13 @@ services:
     stdin_open: true  # keeps terminal open for tui
     tty: true
 
+  persistence_service:
+    build:
+      context: ./s_persistenceService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+
   postgres_service:
     image: postgres:16
     container_name: postgres_db
@@ -28,5 +35,8 @@ services:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+volumes:
+  pg_data:
 
 
