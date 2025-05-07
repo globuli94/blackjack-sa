@@ -17,7 +17,7 @@ lazy val model = (project in file("m_model"))
     )
   )
 
-lazy val persistence = (project in file("m_persistence"))
+lazy val serializer = (project in file("m_serializer"))
   .dependsOn(model)
   .settings(
     name := "m_persistence",
@@ -38,7 +38,7 @@ lazy val persistence = (project in file("m_persistence"))
   )
 
 lazy val controller = (project in file("m_controller"))
-  .dependsOn(model, persistence)
+  .dependsOn(model, serializer)
   .settings(
     name := "m_controller",
     libraryDependencies ++= Seq(
@@ -56,7 +56,7 @@ lazy val controller = (project in file("m_controller"))
   )
 
 lazy val s_gameService = (project in file("."))
-  .aggregate(model, controller, persistence)
+  .aggregate(model, controller, serializer)
   .settings(
     name := "s_gameService",
     Compile / run := (controller / Compile / run).evaluated

@@ -3,11 +3,12 @@ package controller.controllerServer
 import com.google.inject.AbstractModule
 import controller.ControllerInterface
 import controller.controllerComponent.Controller
-import fileIO.fileIOComponent.JSON.FileIOJSON
-import fileIO.fileIOComponent.XML.FileIOXML
-import fileIO.fileIOComponent.FileIOInterface
 import model.modelComponent.{Game, GameFactory, GameFactoryInterface, GameInterface}
 import net.codingwell.scalaguice.ScalaModule
+import serializer.serializerComponent.GameStateSerializer
+import serializer.serializerComponent.JSON.JSONSerializer
+import serializer.serializerComponent.XML.XMLSerializer
+import akka.actor.ActorSystem
 
 
 class ControllerModule extends AbstractModule with ScalaModule {
@@ -17,11 +18,12 @@ class ControllerModule extends AbstractModule with ScalaModule {
     bind[GameInterface].toInstance(game)
     bind[GameFactoryInterface].toInstance(gameFactory)
     bind[ControllerInterface].to[Controller].asEagerSingleton()
+    bind[ActorSystem].toInstance(ActorSystem("ControllerActorSystem"))
 
-    val useJson = System.getProperty("fileio.json", "false").toBoolean
+    val useJson = System.getProperty("fileio.json", "true").toBoolean
     if (useJson) {
-      bind[FileIOInterface].to[FileIOJSON]
+      bind[GameStateSerializer].to[JSONSerializer]
     } else {
-      bind[FileIOInterface].to[FileIOXML]
+      bind[GameStateSerializer].to[XMLSerializer]
     }
 }

@@ -1,16 +1,16 @@
 package util.fileIO
 
-import fileIO.fileIOComponent.XML.FileIOXML
 import model.modelComponent.{DealerState, GameState, PlayerState}
+import serializer.serializerComponent.XML.XMLSerializer
 
 class FileIOXMLSpec extends FileIOTestBase {
-  val fileIO: FileIOXML = new FileIOXML
+  val fileIO: XMLSerializer = new XMLSerializer
   import fileIO.{dealerStateFromString, gameStateFromString, playerStateFromString}
 
   "A FileIOXML Interface" should {
 
     "load a GameInterface from xml" in {
-      val game: GameInterface = fileIO.load("game_test.xml")
+      val game: GameInterface = fileIO.fromString("game_test.xml")
 
       game.getState should be (GameState.Started)
     }
@@ -46,10 +46,10 @@ class FileIOXMLSpec extends FileIOTestBase {
     }
 
     "convert a game into xml" in {
-      val game: GameInterface = fileIO.load("game_test.xml")
+      val game: GameInterface = fileIO.fromString("game_test.xml")
 
-      fileIO.save(game, "game_test.xml")
-      val game_loaded: GameInterface = fileIO.load("game_test.xml")
+      fileIO.toString(game, "game_test.xml")
+      val game_loaded: GameInterface = fileIO.fromString("game_test.xml")
 
       game_loaded.getState should be (game.getState)
     }

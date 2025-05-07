@@ -1,16 +1,16 @@
 package controllers
 
 import controller.controllerComponent.Controller
-import fileIO.fileIOComponent.JSON.FileIOJSON
 import model.modelComponent.{Game, GameState, Player, PlayerState}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.should
 import org.scalatest.wordspec.AnyWordSpec
+import serializer.serializerComponent.JSON.JSONSerializer
 
 class ControllerSpec extends AnyWordSpec with Matchers {
 
   "A Controller" should {
-    val fileIO: FileIOInterface =  FileIOJSON()
+    val fileIO: FileIOInterface =  JSONSerializer()
 
     "load the last saved game on load" in {
       val game: GameInterface = Game()

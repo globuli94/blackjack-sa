@@ -3,12 +3,11 @@ package controller.controllerComponent
 import com.google.inject.Inject
 import controller.ControllerInterface
 import controller.util.{Event, Observable}
-import fileIO.fileIOComponent.FileIOInterface
 import model.modelComponent.{GameFactoryInterface, GameInterface}
 
 import scala.util.{Failure, Try}
 
-case class Controller @Inject (var game: GameInterface, gameFactory: GameFactoryInterface, fileIO: FileIOInterface) extends ControllerInterface with Observable {
+case class Controller @Inject (var game: GameInterface, gameFactory: GameFactoryInterface) extends ControllerInterface with Observable {
 
   override def getGame: GameInterface = game
 
@@ -17,20 +16,9 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
     notifyObservers(Event.load)
   }
 
-  override def saveGame(): Unit = {
-    fileIO.save(gameFactory, game)
-    notifyObservers(Event.save)
-  }
-
-  override def loadGame(): Unit = {
-    game = fileIO.load(gameFactory)
-    notifyObservers(Event.load)
-  }
-
   override def initializeGame(): Unit = {
     game = game.initialize
     notifyObservers(Event.start)
-    saveGame()
   }
 
   override def startGame(): Try[Unit] = {
@@ -38,7 +26,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
       case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.start)
-        saveGame()
         Try(())
       case _ =>
         notifyObservers(Event.invalidCommand)
@@ -51,7 +38,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
       case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.addPlayer)
-        saveGame()
         Try(())
       case _ =>
         // Note: Event.errPlayerNameExists is currently not represented here anymore
@@ -64,7 +50,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
     if(game.getPlayers.nonEmpty) {
         game = game.leavePlayer()
         notifyObservers(Event.leavePlayer)
-        saveGame()
     } else {
       notifyObservers(Event.invalidCommand)
     }
@@ -75,7 +60,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
       case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.hitNextPlayer)
-        saveGame()
         Try(())
       case _ =>
         notifyObservers(Event.invalidCommand)
@@ -88,7 +72,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
       case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.standNextPlayer)
-        saveGame()
         Try(())
       case _ =>
         notifyObservers(Event.invalidCommand)
@@ -101,7 +84,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
       case Some(updatedGame: GameInterface) =>
         game = updatedGame
         notifyObservers(Event.doubleDown)
-        saveGame()
         Try(())
       case _ =>
         notifyObservers(Event.invalidBet)
@@ -115,7 +97,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
         case Some(updatedGame: GameInterface) =>
           game = updatedGame
           notifyObservers(Event.bet)
-          saveGame()
           Try(())
         case _ =>
           notifyObservers(Event.invalidCommand)
@@ -129,7 +110,6 @@ case class Controller @Inject (var game: GameInterface, gameFactory: GameFactory
   }
 
   override def exit(): Unit = {
-    saveGame()
     sys.exit(0)
   }
 

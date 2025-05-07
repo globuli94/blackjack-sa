@@ -1,12 +1,12 @@
-package fileIO.fileIOComponent.XML
+package serializer.serializerComponent.XML
 
-import fileIO.fileIOComponent.FileIOInterface
 import model.modelComponent.*
+import serializer.serializerComponent.GameStateSerializer
 
 import scala.xml.*
 
 
-class FileIOXML extends FileIOInterface {
+class XMLSerializer extends GameStateSerializer {
 
   // PLAYER STATE
   def playerStateFromString(state: String): PlayerState = state match {
@@ -137,15 +137,15 @@ class FileIOXML extends FileIOInterface {
     gameFactory(idx, players, deck, dealer, state)
   }
 
-  override def load(gameFactory: GameFactoryInterface, path: String = "game.json"): GameInterface = {
-    val source = XML.loadFile(path)
+  override def fromString(gameFactory: GameFactoryInterface, data: String): GameInterface = {
+    val source = XML.loadString(data)
     gameFromXML(source, gameFactory)
   }
 
-  override def save(gameFactory: GameFactoryInterface, game: GameInterface, path: String = "game.json"): Unit = {
+  override def toString(game: GameInterface): String = {
     val xml = gameToXML(game)
     val prettyPrinter = new PrettyPrinter(120, 4)
     val prettyXml = prettyPrinter.format(xml)
-    XML.save(path, XML.loadString(prettyXml), "UTF-8", xmlDecl = true, null)
+    prettyXml
   }
 }

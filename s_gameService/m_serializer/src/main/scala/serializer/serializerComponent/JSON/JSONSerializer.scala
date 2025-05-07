@@ -1,15 +1,15 @@
-package fileIO.fileIOComponent.JSON
+package serializer.serializerComponent.JSON
 
-import fileIO.fileIOComponent.FileIOInterface
 import model.modelComponent.*
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
+import serializer.serializerComponent.GameStateSerializer
 
 import java.io.PrintWriter
 import scala.io.Source
 
 
-class  FileIOJSON extends FileIOInterface {
+class JSONSerializer extends GameStateSerializer {
 
   // PLAYER STATE
   implicit val playerStateReads: Reads[PlayerState] = Reads[PlayerState] {
@@ -92,7 +92,6 @@ class  FileIOJSON extends FileIOInterface {
     )((hand, state) => Dealer(hand, state))
 
   // DECK
-  // DECK
   implicit val deckWrites: Writes[Deck] = (deck: Deck) => Json.obj(
     "cards" -> Json.toJson(deck.cards)
   )
@@ -110,29 +109,17 @@ class  FileIOJSON extends FileIOInterface {
     "state" -> game.getState.toString
   )
 
-  override def load(gameFactory: GameFactoryInterface, path: String = "game.json"): GameInterface = {
-    val source = Source.fromFile(path)
-
-    try {
-      val json = Json.parse(source.getLines().mkString)
-
-      val idx = (json \ "current_idx").as[Int]
-      val players = (json \ "players").as[List[Player]]
-      val deck = (json \ "deck").as[Deck]
-      val dealer = (json \ "dealer").as[Dealer]
-      val state = (json \ "state").as[GameState]
-
-      gameFactory(idx, players, deck, dealer, state)
-    } finally {
-      source.close()
-    }
+  override def fromString(gameFactory: GameFactoryInterface, data: String): GameInterface = {
+    val json = Json.parse(data)
+    val idx = (json \ "current_idx").as[Int]
+    val players = (json \ "players").as[List[Player]]
+    val deck = (json \ "deck").as[Deck]
+    val dealer = (json \ "dealer").as[Dealer]
+    val state = (json \ "state").as[GameState]
+    gameFactory(idx, players, deck, dealer, state)
   }
   
-  override def save(gameFactory: GameFactoryInterface, game: GameInterface, path: String = "game.json"): Unit = {
-    val jsonString = Json.stringify(Json.toJson(game))
-    new PrintWriter(path) {
-      write(jsonString);
-      close()
-    }
+  override def toString(game: GameInterface): String = {
+    Json.stringify(Json.toJson(game))
   }
 }

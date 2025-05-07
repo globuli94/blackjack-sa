@@ -6,8 +6,6 @@ import model.modelComponent.GameInterface
 import scala.util.Try
 
 trait ControllerInterface extends Observable {
-  def loadGame(): Unit
-  def saveGame(): Unit
   def getGame: GameInterface
   def setGame(other: GameInterface): Unit
   def initializeGame(): Unit

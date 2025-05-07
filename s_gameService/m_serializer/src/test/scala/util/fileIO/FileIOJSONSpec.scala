@@ -1,6 +1,5 @@
 package util.fileIO
 
-import fileIO.fileIOComponent.JSON.FileIOJSON
 import model.modelComponent.{DealerState, GameState, PlayerState}
 import org.scalamock.function.MockFunction0
 import org.scalamock.proxy.MockFunction
@@ -8,9 +7,10 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.{JsError, JsString}
+import serializer.serializerComponent.JSON.JSONSerializer
 
 class FileIOJSONSpec extends FileIOTestBase {
-  val fileIO = new FileIOJSON
+  val fileIO = new JSONSerializer
   import fileIO.{dealerStateReads, gameStateReads, playerStateReads}
 
   "FileIOJSON" should {
@@ -54,7 +54,7 @@ class FileIOJSONSpec extends FileIOTestBase {
 
     // Test that loading throws an exception
     val exception = intercept[Exception] {
-      fileIO.load(tempFile.getAbsolutePath)
+      fileIO.fromString(tempFile.getAbsolutePath)
     }
 
     // Verify the exception message contains the expected error
