@@ -8,15 +8,15 @@ lazy val s_gameService = (project in file("s_gameService"))
     mainClass := Some("controller.controllerServer.ControllerServer") // specify the main class here
   )
 
-lazy val s_tuiService = (project in file("s_tuiService"))
+lazy val viewService = (project in file("viewService"))
   .settings(
-    name := "s_tuiService",
+    name := "viewService",
     mainClass := Some("tui.TUIApp") // specify the main class here
   )
 
 lazy val root = (project in file("."))
-  .aggregate(s_gameService, s_tuiService)
-  .dependsOn(s_gameService, s_tuiService)
+  .aggregate(s_gameService, viewService)
+  .dependsOn(s_gameService, viewService)
   .settings(
     name := "blackjack",
     Compile / run := (s_gameService / Compile / run).evaluated // default run for root

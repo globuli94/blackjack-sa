@@ -1,21 +1,23 @@
-# Use an official sbt + Scala + JDK image
 FROM sbtscala/scala-sbt:eclipse-temurin-17.0.4_1.7.1_3.2.0
 
-# Set the working directory
-WORKDIR /controllerService
+# 1. Create credentials directory
+RUN mkdir -p /root/.sbt/1.0
 
-# Copy only build files first (to leverage Docker cache)
-COPY build.sbt ./
-COPY project ./project
+# 2. Add GitHub Packages resolver (public info)
+COPY resolvers.sbt /root/.sbt/1.0/resolvers.sbt
 
-# Trigger dependency resolution early
-RUN sbt update
+# 3. Build args for credentials
+ARG GITHUB_USER
+ARG GITHUB_TOKEN
 
-# Now copy the rest of the source code
+# 4. Create credentials file (only during build)
+RUN echo "credentials += Credentials(\"GitHub Package Registry\", \"maven.pkg.github.com\", \"$GITHUB_USER\", \"$GITHUB_TOKEN\")" > /root/.sbt/1.0/credentials.sbt
+
+WORKDIR /app
 COPY . .
+RUN sbt update && sbt compile
 
-# Optional: pre-compile
-RUN sbt compile
+# 5. Remove credentials after build (optional but recommended)
+RUN rm /root/.sbt/1.0/credentials.sbt
 
-# Default command
 CMD ["sbt", "run"]

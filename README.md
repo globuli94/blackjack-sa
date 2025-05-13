@@ -31,9 +31,19 @@ create ~/.sbt/1.0/credentials.sbt
 credentials += Credentials(
     "GitHub Package Registry",
     "maven.pkg.github.com",
-    "USERNAME",
-    "TOKEN" // create -> settings -> developer settings -> personal access tokens (classic) -> "SBT Publishing Token" write: and read: packages
+    "<your-username>",
+    "<your-token>" // create -> settings -> developer settings -> personal access tokens (classic) -> "SBT Publishing Token" write: and read: packages
 )
+
+# for docker container env variables create a .env file in the root (make sure it is included in gitignore)
+GITHUB_USER=<your-username>
+GITHUB_TOKEN=<your-token>
+
+# (when creating microservice) create resolvers.sbt in root of microservice, for dockerfile github resolver access 
+resolvers += "GitHub Package Registry" at "https://maven.pkg.github.com/globuli94/blackjack-sa"
+
+# run docker with
+docker-compose build --no-cache && docker-compose up
 
 # to import the package in a project
 resolvers += "GitHub Packages" at "https://maven.pkg.github.com/globuli94/blackjack-sa",

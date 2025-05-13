@@ -8,6 +8,7 @@ lazy val root = (project in file("."))
     resolvers += "GitHub Packages" at "https://maven.pkg.github.com/globuli94/blackjack-sa",
     libraryDependencies ++= Seq(
       "com.github.globuli94" %% "gamelibrary" % "1.0.0",
+      "org.mongodb.scala" % "mongo-scala-driver_2.13" % "5.1.1",
       "com.lihaoyi" %% "requests" % "0.8.3",
       "com.typesafe.play" %% "play-json" % "2.10.5",
       "com.typesafe.akka" %% "akka-stream" % "2.8.8",

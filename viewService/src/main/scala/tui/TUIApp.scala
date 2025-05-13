@@ -4,7 +4,7 @@ import scala.io.StdIn
 import scala.util.{Try, Success, Failure}
 
 object TUIApp {
-  val baseUrl = "http://game_service:8080/game"
+  val baseUrl = "http://controller_service:8080/game"
 
   def main(args: Array[String]): Unit = {
     var running = true
