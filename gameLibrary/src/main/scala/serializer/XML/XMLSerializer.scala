@@ -1,0 +1,151 @@
+package serializer.XML
+
+import model.{Card, Dealer, DealerState, Deck, GameFactoryInterface, GameInterface, GameState, Hand, Player, PlayerState}
+import serializer.GameStateSerializer
+
+import scala.xml.{Elem, Node, PrettyPrinter, XML}
+
+
+class XMLSerializer extends GameStateSerializer {
+
+  // PLAYER STATE
+  def playerStateFromString(state: String): PlayerState = state match {
+    case "Playing" => PlayerState.Playing
+    case "Standing" => PlayerState.Standing
+    case "DoubledDown" => PlayerState.DoubledDown
+    case "Busted" => PlayerState.Busted
+    case "Blackjack" => PlayerState.Blackjack
+    case "WON" => PlayerState.WON
+    case "LOST" => PlayerState.LOST
+    case "Betting" => PlayerState.Betting
+    case "Idle" => PlayerState.Idle
+    case "Split" => PlayerState.Split
+    case _ => throw new IllegalArgumentException("Invalid PlayerState")
+  }
+
+  // DEALER STATE
+  def dealerStateFromString(state: String): DealerState = state match {
+    case "Idle" => DealerState.Idle
+    case "Dealing" => DealerState.Dealing
+    case "Bust" => DealerState.Bust
+    case "Standing" => DealerState.Standing
+    case _ => throw new IllegalArgumentException("Invalid DealerState")
+  }
+
+  // GAME STATE
+  def gameStateFromString(state: String): GameState = state match {
+    case "Initialized" => GameState.Initialized
+    case "Betting" => GameState.Betting
+    case "Started" => GameState.Started
+    case "Evaluated" => GameState.Evaluated
+    case _ => throw new IllegalArgumentException("Invalid GameState")
+  }
+
+  // CARD
+  private def cardToXML(card: Card): Elem = {
+    <card>
+      <rank>{card.rank}</rank>
+      <suit>{card.suit}</suit>
+    </card>
+  }
+
+  private def cardFromXML(node: Node): Card = {
+    val rank = (node \ "rank").text
+    val suit = (node \ "suit").text
+    Card(rank, suit)
+  }
+
+  // HAND
+  private def handToXML(hand: Hand): Elem = {
+    <cards>
+      {hand.cards.map(cardToXML)}
+    </cards>
+  }
+
+  private def handFromXML(node: Node): Hand = {
+    val cardsNode = (node \ "cards").headOption.getOrElse(node)
+    val cards = (cardsNode \ "card").map(cardFromXML).toList
+    Hand(cards)
+  }
+
+  // PLAYER
+  private def playerToXML(player: Player): Elem = {
+    <player>
+      <name>{player.name}</name>
+      <hand>{handToXML(player.hand)}</hand>
+      <money>{player.money}</money>
+      <bet>{player.bet}</bet>
+      <state>{player.state.toString}</state>
+    </player>
+  }
+
+  private def playerFromXML(node: Node): Player = {
+    val name = (node \ "name").text
+    val hand = handFromXML((node \ "hand").head)
+    val money = (node \ "money").text.toInt
+    val bet = (node \ "bet").text.toInt
+    val state = playerStateFromString((node \ "state").text)
+    Player(name, hand, money, bet, state)
+  }
+
+  // DEALER
+  private def dealerToXML(dealer: Dealer): Elem = {
+    <dealer>
+      <hand>{handToXML(dealer.hand)}</hand>
+      <state>{dealer.state.toString}</state>
+    </dealer>
+  }
+
+  private def dealerFromXML(node: Node): Dealer = {
+    val dealerNode = (node \ "dealer").headOption.getOrElse(node)
+    val hand = handFromXML((dealerNode \ "hand").head)
+    val state = dealerStateFromString((dealerNode \ "state").text)
+    Dealer(hand, state)
+  }
+
+  // DECK
+  private def deckToXML(deck: Deck): Elem = {
+    <cards>
+      {deck.cards.map(cardToXML)}
+    </cards>
+  }
+
+  private def deckFromXML(node: Node): Deck = {
+    val cards = (node \ "cards" \ "card").map(cardFromXML).toList
+    Deck(cards)
+  }
+
+  // GAME
+  private def gameToXML(game: GameInterface): Elem = {
+    <game>
+      <current_idx>{game.getIndex}</current_idx>
+      <players>
+        {game.getPlayers.map(playerToXML)}
+      </players>
+      <deck>{deckToXML(game.getDeck)}</deck>
+      <dealer>{dealerToXML(game.getDealer)}</dealer>
+      <state>{game.getState.toString}</state>
+    </game>
+  }
+
+  private def gameFromXML(node: Node, gameFactory: GameFactoryInterface): GameInterface = {
+    val idx = (node \ "current_idx").text.toInt
+    val players = (node \ "players" \ "player").map(playerFromXML).toList
+    val deck = deckFromXML((node \ "deck").head)
+    val dealer = dealerFromXML((node \ "dealer").head)
+    val state = gameStateFromString((node \ "state").text)
+    gameFactory(idx, players, deck, dealer, state)
+  }
+
+  override def fromString(gameFactory: GameFactoryInterface, data: String): GameInterface = {
+    val source = XML.loadString(data)
+    gameFromXML(source, gameFactory)
+  }
+
+  override def toString(game: GameInterface): String = {
+    val xml = gameToXML(game)
+    val prettyPrinter = new PrettyPrinter(120, 4)
+    val prettyXml = prettyPrinter.format(xml)
+    prettyXml
+  }
+}
