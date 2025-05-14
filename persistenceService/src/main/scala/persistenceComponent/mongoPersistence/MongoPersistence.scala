@@ -16,7 +16,6 @@ class MongoPersistence(mongoClient: MongoClient, dbName: String)(implicit ec: Ex
   private val collection: MongoCollection[Document] = database.getCollection("game_states")
 
   def init(): Future[Unit] = {
-    // In MongoDB, collections are created implicitly when first used
     Future.successful(())
   }
 

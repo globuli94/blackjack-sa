@@ -49,11 +49,11 @@ object TUIApp {
           case "leave" :: Nil =>
             post("/leave")
 
-          case "save" :: Nil =>
-            post("/save")
+          case "save" :: id ::Nil =>
+            post(s"/save?gameId=$id")
 
-          case "load" :: Nil =>
-            post("/load")
+          case "load" :: id ::Nil =>
+            post(s"/load?gameId=$id")
 
           case "state" :: Nil =>
             get("/state")

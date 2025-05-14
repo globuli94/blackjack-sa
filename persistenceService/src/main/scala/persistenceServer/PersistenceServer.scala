@@ -9,6 +9,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object PersistenceServer {
+
+  val host = "0.0.0.0"
+
   implicit val system: ActorSystem = ActorSystem("blackjack-controller")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
   implicit val mat: Materializer = Materializer(system)
@@ -17,11 +20,12 @@ object PersistenceServer {
 
     val persistenceRoutes: PersistenceRoutes = PersistenceRoutes()
     val routes: Route = persistenceRoutes.routes
-    val binding = Http().newServerAt("0.0.0.0", 8082).bind(routes)
+    val binding = Http().newServerAt(host, 8082).bind(routes)
 
     binding.onComplete {
       case scala.util.Success(binding) =>
-        println(s"Persistence server started at http://0.0.0.0:8082/")
+        println(s"Persistence server started at http://$host:8082/")
+
       case scala.util.Failure(exception) =>
         println(s"Failed to bind server: ${exception.getMessage}")
         system.terminate()

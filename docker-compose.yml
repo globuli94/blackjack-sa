@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - postgres_service
-      - mongo  # Add MongoDB dependency
+      - mongo_service  # Add MongoDB dependency
     ports:
       - "8082:8082"
     environment:
@@ -59,10 +59,9 @@ services:
     ports:
       - "5432:5432"
 
-  mongo:  # New MongoDB service
+  mongo_service:  # New MongoDB service
     image: mongo:5
     container_name: mongo_db
-    restart: always
     environment:
       MONGO_INITDB_DATABASE: game_database
     volumes:

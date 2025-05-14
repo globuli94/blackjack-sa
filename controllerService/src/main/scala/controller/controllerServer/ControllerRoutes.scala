@@ -1,6 +1,5 @@
 package controller.controllerServer
 
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import com.google.inject.{Guice, Inject, Injector}
@@ -94,9 +93,10 @@ class ControllerRoutes @Inject() (controller: ControllerInterface)(implicit syst
 
               val request = HttpRequest(
                 method = HttpMethods.POST,
-                uri = s"http://0.0.0.0:8082/persistence/storeGame?key=$gameId",
+                uri = s"$persistenceServiceUrl/storeGame?key=$gameId",
                 entity = HttpEntity(ContentTypes.`application/json`, serializedData)
               )
+
 
               val response = Http(system).singleRequest(request)
 
@@ -114,7 +114,7 @@ class ControllerRoutes @Inject() (controller: ControllerInterface)(implicit syst
             parameters("gameId") { gameId =>
               val request = HttpRequest(
                 method = HttpMethods.GET,
-                uri = s"http://0.0.0.0:8082/persistence/retrieveGame?key=$gameId"
+                uri = s"$persistenceServiceUrl/retrieveGame?key=$gameId"
               )
 
               val response = Http(system).singleRequest(request)

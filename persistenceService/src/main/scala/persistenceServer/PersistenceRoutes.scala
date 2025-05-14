@@ -18,13 +18,13 @@ import play.api.libs.json.Json
 class PersistenceRoutes {
 
   val db = Database.forConfig("slick.db.default")
-  private val mongoClient: MongoClient = MongoClient("mongodb://localhost:27017")
+  private val mongoClient: MongoClient = MongoClient("mongodb://mongo_service:27017")
 
-  private val postgre_persistence = new PostgreSQLPersistence(db)
+  private val postgres_persistence = new PostgreSQLPersistence(db)
   private val mongo_persistence = new MongoPersistence(mongoClient, "game_database")
 
 
-  postgre_persistence.init()
+  postgres_persistence.init()
   mongo_persistence.init()
 
   val routes: Route =
@@ -36,7 +36,9 @@ class PersistenceRoutes {
               parseGameState(jsonString) match {
                 case Success(game) => {
                   onComplete(mongo_persistence.save(key, game)) {
-                    case Success(_) => complete(StatusCodes.OK)
+                    case Success(_) =>
+                      println(s"saved document: $key")
+                      complete(StatusCodes.OK)
                     case Failure(_) => complete(StatusCodes.InternalServerError, "Saving failed")
                   }
                 }
@@ -49,6 +51,7 @@ class PersistenceRoutes {
           parameter("key") { key =>
             onSuccess(mongo_persistence.get(key)) {
               case Some(gameState) =>
+                println(s"retrieved document: $key")
                 complete(HttpEntity(ContentTypes.`application/json`, Json.stringify(Json.toJson(gameState))))
               case None =>
                 complete(StatusCodes.NotFound, s"No game found for key: $key")
