@@ -4,5 +4,7 @@ ThisBuild / scalaVersion := "3.3.1"
 lazy val root = (project in file("."))
   .settings(
     name := "viewService",
-    resolvers += "GitHub Packages" at "https://maven.pkg.github.com/globuli94/blackjack-sa"
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "requests" % "0.8.3"
+    )
   )
