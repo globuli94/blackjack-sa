@@ -13,9 +13,7 @@ import akka.actor.ActorSystem
 
 class ControllerModule extends AbstractModule with ScalaModule {
   override def configure(): Unit =
-    val game = Game()
     val gameFactory = GameFactory()
-    bind[GameInterface].toInstance(game)
     bind[GameFactoryInterface].toInstance(gameFactory)
     bind[ControllerInterface].to[Controller].asEagerSingleton()
     bind[ActorSystem].toInstance(ActorSystem("ControllerActorSystem"))
