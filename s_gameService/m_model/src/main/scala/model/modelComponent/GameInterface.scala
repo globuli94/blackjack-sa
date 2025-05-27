@@ -28,5 +28,6 @@ trait GameInterface {
 }
 
 trait GameFactoryInterface {
+  def apply(): GameInterface
   def apply(idx: Int, players: List[Player], deck: Deck, dealer: Dealer, state: GameState): GameInterface
 }

@@ -5,115 +5,146 @@ import controller.ControllerInterface
 import controller.util.{Event, Observable}
 import model.modelComponent.{GameFactoryInterface, GameInterface}
 
-import scala.util.{Failure, Try}
+import scala.collection.concurrent.TrieMap
+import scala.util.{Failure, Success, Try}
 
-case class Controller @Inject (var game: GameInterface, gameFactory: GameFactoryInterface) extends ControllerInterface with Observable {
+class Controller @Inject()(gameFactory: GameFactoryInterface)
+  extends ControllerInterface with Observable {
 
-  override def getGame: GameInterface = game
+  private val sessions = TrieMap.empty[String, GameInterface]
 
-  override def setGame(other: GameInterface): Unit = {
-    game = other
-    notifyObservers(Event.load)
-  }
-
-  override def initializeGame(): Unit = {
-    game = game.initialize
-    notifyObservers(Event.start)
-  }
-
-  override def startGame(): Try[Unit] = {
-    game.startGame match {
-      case Some(updatedGame: GameInterface) =>
-        game = updatedGame
-        notifyObservers(Event.start)
-        Try(())
-      case _ =>
-        notifyObservers(Event.invalidCommand)
-        Failure(Exception("Game can't be started right now"))
+  def createSession(sessionId: String): Try[Unit] = {
+    if (sessions.contains(sessionId))
+      Failure(new Exception(s"Session '$sessionId' exists already"))
+    else {
+      val newGame = gameFactory()
+      sessions.put(sessionId, newGame)
+      notifyObservers(Event.load)
+      Success(())
     }
   }
 
-  override def addPlayer(name: String): Try[Unit] = {
-    game.createPlayer(name) match {
-      case Some(updatedGame: GameInterface) =>
-        game = updatedGame
-        notifyObservers(Event.addPlayer)
-        Try(())
-      case _ =>
-        // Note: Event.errPlayerNameExists is currently not represented here anymore
-        notifyObservers(Event.invalidCommand)
-        Failure(new Exception("Cannot add players right now"))
-    }
-  }
+  private def withGame[T](sessionId: String)(fn: GameInterface => Try[T]): Try[T] =
+    sessions.get(sessionId)
+      .map(fn)
+      .getOrElse(Failure(new Exception(s"Couldn't find session '$sessionId'")))
 
-  override def leavePlayer(): Unit = {
-    if(game.getPlayers.nonEmpty) {
-        game = game.leavePlayer()
-        notifyObservers(Event.leavePlayer)
-    } else {
-      notifyObservers(Event.invalidCommand)
-    }
-  }
+  def getGame(sessionId: String): Try[GameInterface] =
+    withGame(sessionId)(g => Success(g))
 
-  override def hitPlayer(): Try[Unit] = {
-    game.hitPlayer match {
-      case Some(updatedGame: GameInterface) =>
-        game = updatedGame
-        notifyObservers(Event.hitNextPlayer)
-        Try(())
-      case _ =>
-        notifyObservers(Event.invalidCommand)
-        Failure(Exception("Cannot hit player right now"))
+  def setGame(sessionId: String, other: GameInterface): Try[Unit] =
+    withGame(sessionId) { _ =>
+      sessions.update(sessionId, other)
+      notifyObservers(Event.load)
+      Success(())
     }
-  }
 
-  override def standPlayer(): Try[Unit] = {
-    game.standPlayer match {
-      case Some(updatedGame: GameInterface) =>
-        game = updatedGame
-        notifyObservers(Event.standNextPlayer)
-        Try(())
-      case _ =>
-        notifyObservers(Event.invalidCommand)
-        Failure(Exception("Player can't stand right now"))
+  def initializeGame(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      val init = g.initialize
+      sessions.update(sessionId, init)
+      notifyObservers(Event.start)
+      Success(())
     }
-  }
 
-  override def doubleDown(): Try[Unit] = {
-    game.doubleDownPlayer match {
-      case Some(updatedGame: GameInterface) =>
-        game = updatedGame
-        notifyObservers(Event.doubleDown)
-        Try(())
-      case _ =>
-        notifyObservers(Event.invalidBet)
-        Failure(Exception("Cannot double down right now"))
-    }
-  }
-
-  override def bet(amount: String): Try[Unit] = {
-    try {
-      game.betPlayer(amount.toInt) match {
-        case Some(updatedGame: GameInterface) =>
-          game = updatedGame
-          notifyObservers(Event.bet)
-          Try(())
+  def startGame(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      g.startGame match {
+        case Some(updated) =>
+          sessions.update(sessionId, updated)
+          notifyObservers(Event.start)
+          Success(())
         case _ =>
           notifyObservers(Event.invalidCommand)
-          Failure(Exception("Invalid bet amount"))
+          Failure(Exception("Game can't be started right now"))
       }
-    } catch {
-      case _: NumberFormatException =>
-        notifyObservers(Event.invalidCommand)
-        Failure(Exception("Bet was not integer value"))
     }
-  }
 
-  override def exit(): Unit = {
-    sys.exit(0)
-  }
+  def addPlayer(sessionId: String, name: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      g.createPlayer(name) match {
+        case Some(updated) =>
+          sessions.update(sessionId, updated)
+          notifyObservers(Event.addPlayer)
+          Success(())
+        case _ =>
+          notifyObservers(Event.invalidCommand)
+          Failure(new Exception("Cannot add players right now"))
+      }
+    }
 
-  override def toString: String = {
-    game.toString
-  }
+  def leavePlayer(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      if (g.getPlayers.nonEmpty) {
+        sessions.update(sessionId, g.leavePlayer())
+        notifyObservers(Event.leavePlayer)
+        Success(())
+      } else {
+        notifyObservers(Event.invalidCommand)
+        Failure(new Exception())
+      }
+    }
+
+  def hitPlayer(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      g.hitPlayer match {
+        case Some(updated) =>
+          sessions.update(sessionId, updated)
+          notifyObservers(Event.hitNextPlayer)
+          Success(())
+        case _ =>
+          notifyObservers(Event.invalidCommand)
+          Failure(new Exception("Hit gerade nicht möglich"))
+      }
+    }
+
+  def standPlayer(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      g.standPlayer match {
+        case Some(updated) =>
+          sessions.update(sessionId, updated)
+          notifyObservers(Event.standNextPlayer)
+          Success(())
+        case _ =>
+          notifyObservers(Event.invalidCommand)
+          Failure(Exception("Player can't stand right now"))
+      }
+    }
+
+  def doubleDown(sessionId: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      g.doubleDownPlayer match {
+        case Some(updated) =>
+          sessions.update(sessionId, updated)
+          notifyObservers(Event.doubleDown)
+          Success(())
+        case _ =>
+          notifyObservers(Event.invalidBet)
+          Failure(Exception("Cannot double down right now"))
+      }
+    }
+
+  def bet(sessionId: String, amount: String): Try[Unit] =
+    withGame(sessionId) { g =>
+      Try(amount.toInt).toOption match {
+        case Some(v) =>
+          g.betPlayer(v) match {
+            case Some(updated) =>
+              sessions.update(sessionId, updated)
+              notifyObservers(Event.bet)
+              Success(())
+            case _ =>
+              notifyObservers(Event.invalidCommand)
+              Failure(Exception("Invalid bet amount"))
+          }
+        case None =>
+          notifyObservers(Event.invalidCommand)
+          Failure(Exception("Bet was not integer value"))
+      }
+    }
+
+  def exit(): Unit = sys.exit(0)
+
+  def gameToString(sessionId: String): String =
+    sessions.get(sessionId).map(_.toString).getOrElse(s"Session '$sessionId' nicht gefunden")
 }
