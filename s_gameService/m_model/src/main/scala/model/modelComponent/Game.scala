@@ -322,8 +322,8 @@ case class Game @Inject() (
   }
 
   override def toString: String = {
-    println("\u001b[H\u001b[2J") // Clear console
 
+    println("\u001b[H\u001b[2J") // Clear console
     // ASCII Art Title
     println(
       "         ____  __           __     _            __  \n" +

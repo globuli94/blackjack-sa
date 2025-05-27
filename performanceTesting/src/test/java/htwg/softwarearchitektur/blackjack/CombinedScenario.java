@@ -1,11 +1,13 @@
 package htwg.softwarearchitektur.blackjack;
 
+import java.time.Duration;
 import io.gatling.javaapi.core.ScenarioBuilder;
 import io.gatling.javaapi.core.Simulation;
 import io.gatling.javaapi.http.HttpProtocolBuilder;
 
 import static io.gatling.javaapi.core.CoreDsl.scenario;
-import static io.gatling.javaapi.core.CoreDsl.atOnceUsers;
+import static io.gatling.javaapi.core.CoreDsl.constantConcurrentUsers;
+import static io.gatling.javaapi.core.CoreDsl.rampUsers;
 import static io.gatling.javaapi.http.HttpDsl.http;
 
 import static htwg.softwarearchitektur.blackjack.LoadGamePageChains.loadGamePageChain;
@@ -23,7 +25,7 @@ public class CombinedScenario extends Simulation {
 		.acceptHeader("*/*")
 		.acceptEncodingHeader("gzip, deflate, br")
 		.acceptLanguageHeader("de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7")
-		.userAgentHeader("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36");
+		.userAgentHeader("Mozilla/5.0 (X11; Linux x86_64)");
 
 	private ScenarioBuilder scn = scenario("CombinedScenario")
 		.exec(loadGamePageChain)
@@ -37,7 +39,9 @@ public class CombinedScenario extends Simulation {
 
 	{
 		setUp(
-			scn.injectOpen(atOnceUsers(50))
+			scn.injectClosed(
+				constantConcurrentUsers(50).during(Duration.ofMinutes(1))
+			)
 		).protocols(httpProtocol);
 	}
 }
