@@ -24,7 +24,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
 
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val routes: Route =
+  val routes: Route = {
     concat(
       pathEndOrSingleSlash {
         get {
@@ -47,15 +47,20 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("start") {
             post {
               controller.startGame(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
+                case Failure(_) => 
+                  complete(StatusCodes.InternalServerError)
               }
             }
           },
           path("addPlayer" / Segment) { name =>
             post {
               controller.addPlayer(sessionId, name) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -63,7 +68,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("hit") {
             post {
               controller.hitPlayer(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -71,7 +78,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("stand") {
             post {
               controller.standPlayer(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -79,7 +88,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("doubleDown") {
             post {
               controller.doubleDown(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -87,7 +98,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("bet" / Segment) { amount =>
             post {
               controller.bet(sessionId, amount) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  //sendToAI(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -95,6 +108,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("leave") {
             post {
               controller.leavePlayer(sessionId)
+              //sendToAI(sessionId)
               complete(StatusCodes.OK)
             }
           },
@@ -142,4 +156,6 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
         )
       }
     )
+  }
 }
+  
