@@ -30,7 +30,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
         val serialized = gameStateSerializer.toString(game)
         val request = HttpRequest(
           method = HttpMethods.POST,
-          uri = s"http://ai_service:8083/notify",
+          uri = s"http://localhost:8083/notify",
           entity = HttpEntity(ContentTypes.`application/json`, serialized)
         )
         Http(system).singleRequest(request).onComplete {
@@ -70,7 +70,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.startGame(sessionId) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) =>
                   complete(StatusCodes.InternalServerError)
@@ -81,7 +81,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.addPlayer(sessionId, name) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -91,7 +91,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.hitPlayer(sessionId) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -101,7 +101,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.standPlayer(sessionId) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -111,7 +111,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.doubleDown(sessionId) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -121,7 +121,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.bet(sessionId, amount) match {
                 case Success(_) =>
-                  sendToAI(sessionId)
+                  //sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -142,7 +142,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               }
               val req = HttpRequest(
                 method = HttpMethods.POST,
-                uri = s"http://persistence_service:8082/persistence/storeGame?key=$sessionId",
+                uri = s"http://localhost:8082/persistence/storeGame?key=$sessionId",
                 entity = HttpEntity(ContentTypes.`application/json`, serialized)
               )
               onComplete(Http(system).singleRequest(req)) {
@@ -155,7 +155,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               val req = HttpRequest(
                 method = HttpMethods.GET,
-                uri = s"http://persistence_service:8082/persistence/retrieveGame?key=$sessionId"
+                uri = s"http://localhost:8082/persistence/retrieveGame?key=$sessionId"
               )
               onComplete(Http(system).singleRequest(req)) {
                 case Success(resp) if resp.status == StatusCodes.OK =>

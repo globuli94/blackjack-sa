@@ -11,7 +11,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.concurrent.duration.*
 
 object aiServer {
-  private val baseUrl = "http://game_service:8080/game"
+  private val baseUrl = "http://localhost:8080/game"
   private val buffer = 100
 
   implicit val system: ActorSystem = ActorSystem("ai")

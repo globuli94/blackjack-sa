@@ -11,11 +11,21 @@ import persistenceComponent.postgresPersistence.PostgreSQLPersistence
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json.Json
 
+import org.mongodb.scala.MongoClient
+import persistenceComponent.mongoPersistence.MongoPersistence
+
 class PersistenceRoutes {
 
   val db = Database.forConfig("slick.db.default")
-  val persistence = new PostgreSQLPersistence(db)
-  persistence.init()
+  private val mongoClient: MongoClient = MongoClient("mongodb://localhost:27017")
+
+  private val postgres_persistence = new PostgreSQLPersistence(db)
+  private val mongo_persistence = new MongoPersistence(mongoClient, "game_database")
+
+  postgres_persistence.init()
+  mongo_persistence.init()
+
+  val persistence = mongo_persistence
 
   val routes: Route =
     pathPrefix("persistence") {

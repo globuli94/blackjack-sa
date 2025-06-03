@@ -15,6 +15,8 @@ lazy val persistence = (project in file("m_persistence"))
     name := "m_persistence",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "requests" % "0.8.0",
+      "org.mongodb.scala" % "mongo-scala-driver_2.13" % "5.1.1",
+      "org.slf4j" % "slf4j-simple" % "2.0.13",
       "com.typesafe.play" %% "play-json" % "2.10.4",
       "com.typesafe.akka" %% "akka-stream" % "2.8.8",
       "com.typesafe.akka" %% "akka-http" % "10.5.3",
