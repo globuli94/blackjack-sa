@@ -24,6 +24,28 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
 
   implicit val ec: ExecutionContext = system.dispatcher
 
+  private def sendToAI(sessionId: String): Unit =
+    controller.getGame(sessionId) match {
+      case Success(game) =>
+        val serialized = gameStateSerializer.toString(game)
+        val request = HttpRequest(
+          method = HttpMethods.POST,
+          uri = s"http://ai_service:8083/notify",
+          entity = HttpEntity(ContentTypes.`application/json`, serialized)
+        )
+        Http(system).singleRequest(request).onComplete {
+          case Success(response) if response.status.isSuccess() =>
+            system.log.info(s"Successfully notified external service for session $sessionId")
+          case Success(response) =>
+            system.log.warning(s"Failed to notify external service: ${response.status}")
+          case Failure(ex) =>
+            system.log.error(s"Error notifying external service: ${ex.getMessage}")
+        }
+
+      case Failure(ex) =>
+        system.log.warning(s"Could not serialize game for session $sessionId: ${ex.getMessage}")
+    }
+
   val routes: Route = {
     concat(
       pathEndOrSingleSlash {
@@ -48,9 +70,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.startGame(sessionId) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
-                case Failure(_) => 
+                case Failure(_) =>
                   complete(StatusCodes.InternalServerError)
               }
             }
@@ -59,7 +81,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.addPlayer(sessionId, name) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -69,7 +91,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.hitPlayer(sessionId) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -79,7 +101,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.standPlayer(sessionId) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -89,7 +111,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.doubleDown(sessionId) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -99,7 +121,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.bet(sessionId, amount) match {
                 case Success(_) =>
-                  //sendToAI(sessionId)
+                  sendToAI(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -108,7 +130,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("leave") {
             post {
               controller.leavePlayer(sessionId)
-              //sendToAI(sessionId)
+              sendToAI(sessionId)
               complete(StatusCodes.OK)
             }
           },
@@ -158,4 +180,3 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
     )
   }
 }
-  

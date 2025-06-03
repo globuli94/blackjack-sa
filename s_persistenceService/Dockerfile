@@ -1,21 +1,21 @@
-# Verwende ein offizielles sbt + Scala + JDK-Image
+# Use an official sbt + Scala + JDK image
 FROM sbtscala/scala-sbt:eclipse-temurin-17.0.4_1.7.1_3.2.0
 
-# Setze das Arbeitsverzeichnis
+# Set the working directory
 WORKDIR /persistenceService
 
-# Kopiere nur die Build-Dateien zuerst (um Docker-Cache zu nutzen)
+# Copy build files to leverage caching
 COPY build.sbt ./
 COPY project ./project
 
-# Trigger dependency resolution early
+# Download dependencies early
 RUN sbt update
 
-# Jetzt den restlichen Quellcode kopieren
+# Copy all source code
 COPY . .
 
-# Optional: Kompiliere das Projekt vorab
-RUN sbt compile
+# Build fat JAR using sbt assembly (make sure sbt-assembly plugin is enabled in your project)
+RUN sbt assembly
 
-# Standardbefehl zum Starten des Containers
-CMD ["sbt", "run"]
+# Run the JAR - replace the jar name with your actual output jar path
+CMD ["java", "-jar", "target/scala-2.13/gameService-assembly-0.1.0.jar"]

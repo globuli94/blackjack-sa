@@ -4,18 +4,18 @@ FROM sbtscala/scala-sbt:eclipse-temurin-17.0.4_1.7.1_3.2.0
 # Set the working directory
 WORKDIR /gameService
 
-# Copy only build files first (to leverage Docker cache)
+# Copy build files to leverage caching
 COPY build.sbt ./
 COPY project ./project
 
-# Trigger dependency resolution early
+# Download dependencies early
 RUN sbt update
 
-# Now copy the rest of the source code
+# Copy all source code
 COPY . .
 
-# Optional: pre-compile
-RUN sbt compile
+# Build fat JAR using sbt assembly (make sure sbt-assembly plugin is enabled in your project)
+RUN sbt assembly
 
-# Default command
-CMD ["sbt", "run"]
+# Run the JAR - replace the jar name with your actual output jar path
+CMD ["java", "-jar", "target/scala-2.13/gameService-assembly-0.1.0.jar"]
