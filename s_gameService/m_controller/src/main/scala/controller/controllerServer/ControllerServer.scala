@@ -10,6 +10,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object ControllerServer {
+
+  val host = "0.0.0.0"
+
   private val injector: Injector = Guice.createInjector(new ControllerModule)
   implicit val system: ActorSystem = ActorSystem("blackjack-controller")
   implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -19,11 +22,11 @@ object ControllerServer {
 
     val controllerRoutes: ControllerRoutes = injector.getInstance(classOf[ControllerRoutes])
     val routes: Route = controllerRoutes.routes
-    val binding = Http().newServerAt("0.0.0.0", 8080).bind(routes)
+    val binding = Http().newServerAt(host, 8080).bind(routes)
 
     binding.onComplete {
       case scala.util.Success(binding) =>
-        println(s"Game server started at http://0.0.0.0:8080/")
+        println(s"Game server started at http://$host:8080/")
       case scala.util.Failure(exception) =>
         println(s"Failed to bind server: ${exception.getMessage}")
         system.terminate()

@@ -1,182 +1,177 @@
 package controller.controllerServer
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
-import akka.util.ByteString
 import com.google.inject.{Guice, Inject, Injector}
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpMethods
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpResponse
+import akka.util.ByteString
+import akka.actor.ActorSystem
 import controller.ControllerInterface
 import model.modelComponent.GameFactoryInterface
 import serializer.serializerComponent.GameStateSerializer
 
 import java.nio.file.Paths
-import java.util.UUID
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit system: ActorSystem) {
+class ControllerRoutes @Inject() (controller: ControllerInterface)(implicit system: ActorSystem) {
+
+  private val persistenceServiceUrl = "http://localhost:8082/persistence"
+  implicit val executionContext: ExecutionContext = system.dispatcher
+
   private val injector: Injector = Guice.createInjector(new ControllerModule)
   private val gameStateSerializer: GameStateSerializer = injector.getInstance(classOf[GameStateSerializer])
   private val gameFactory: GameFactoryInterface = injector.getInstance(classOf[GameFactoryInterface])
 
-  implicit val ec: ExecutionContext = system.dispatcher
+  def postCurrentGameToNotify(implicit system: ActorSystem, ec: ExecutionContext): Future[HttpResponse] = {
+    val serializedGame = gameStateSerializer.toString(controller.getGame) // your game as JSON string
 
-  private def sendToAI(sessionId: String): Unit =
-    controller.getGame(sessionId) match {
-      case Success(game) =>
-        val serialized = gameStateSerializer.toString(game)
-        val request = HttpRequest(
-          method = HttpMethods.POST,
-          uri = s"http://localhost:8083/notify",
-          entity = HttpEntity(ContentTypes.`application/json`, serialized)
-        )
-        Http(system).singleRequest(request).onComplete {
-          case Success(response) if response.status.isSuccess() =>
-            system.log.info(s"Successfully notified external service for session $sessionId")
-          case Success(response) =>
-            system.log.warning(s"Failed to notify external service: ${response.status}")
-          case Failure(ex) =>
-            system.log.error(s"Error notifying external service: ${ex.getMessage}")
-        }
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = "http://localhost:8083/notify", // adjust to your notify endpoint URL
+      entity = HttpEntity(ContentTypes.`application/json`, serializedGame)
+    )
 
-      case Failure(ex) =>
-        system.log.warning(s"Could not serialize game for session $sessionId: ${ex.getMessage}")
-    }
+    Http(system).singleRequest(request)
+  }
 
-  val routes: Route = {
-    concat(
-      pathEndOrSingleSlash {
-        get {
-          parameter("sessionId".?) {
-            case None =>
-              val sessionId = UUID.randomUUID().toString
-              controller.createSession(sessionId)
-              redirect(s"/?sessionId=$sessionId", StatusCodes.SeeOther)
-
-            case Some(id) =>
-              getFromFile(Paths.get("m_client/dist/index.html").toFile)
+  val routes: Route =
+    pathPrefix("game") {
+      concat(
+        path("start") {
+          post {
+            controller.startGame() match {
+              case Success(_) =>
+                println("start")
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
           }
-        }
-      },
-      pathPrefix("") {
-        getFromDirectory(Paths.get("m_client/dist").toFile.getAbsolutePath)
-      },
-      pathPrefix("game" / Segment) { sessionId =>
-        concat(
-          path("start") {
-            post {
-              controller.startGame(sessionId) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
+        },
+        path("addPlayer" / Segment) { name =>
+          post {
+            controller.addPlayer(name) match {
+              case Success(_) =>
+                println("add playeer")
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
+          }
+        },
+        path("hit") {
+          post {
+            controller.hitPlayer() match {
+              case Success(_) =>
+                println("hit")
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
+          }
+        },
+        path("stand") {
+          post {
+            controller.standPlayer() match {
+              case Success(_) =>
+                println("stand")
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
+          }
+        },
+        path("doubleDown") {
+          post {
+            controller.doubleDown() match {
+              case Success(_) =>
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
+          }
+        },
+        path("bet" / Segment) { amount =>
+          post {
+            controller.bet(amount) match {
+              case Success(_) =>
+                postCurrentGameToNotify
+                complete(StatusCodes.OK)
+              case Failure(_) => complete(StatusCodes.InternalServerError)
+            }
+          }
+        },
+        path("leave") {
+          post {
+            controller.leavePlayer()
+            postCurrentGameToNotify
+            complete(StatusCodes.OK)
+          }
+        },
+        path("save") {
+          post {
+            parameters("gameId") { gameId =>
+
+              val serializedData = gameStateSerializer.toString(controller.getGame)
+
+              val request = HttpRequest(
+                method = HttpMethods.POST,
+                uri = s"$persistenceServiceUrl/storeGame?key=$gameId",
+                entity = HttpEntity(ContentTypes.`application/json`, serializedData)
+              )
+
+
+              val response = Http(system).singleRequest(request)
+
+              onComplete(response) {
+                case Success(res) if res.status == StatusCodes.OK =>
                   complete(StatusCodes.OK)
-                case Failure(_) =>
+                case _ =>
                   complete(StatusCodes.InternalServerError)
               }
             }
-          },
-          path("addPlayer" / Segment) { name =>
-            post {
-              controller.addPlayer(sessionId, name) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
-                  complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("hit") {
-            post {
-              controller.hitPlayer(sessionId) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
-                  complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("stand") {
-            post {
-              controller.standPlayer(sessionId) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
-                  complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("doubleDown") {
-            post {
-              controller.doubleDown(sessionId) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
-                  complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("bet" / Segment) { amount =>
-            post {
-              controller.bet(sessionId, amount) match {
-                case Success(_) =>
-                  //sendToAI(sessionId)
-                  complete(StatusCodes.OK)
-                case Failure(_) => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("leave") {
-            post {
-              controller.leavePlayer(sessionId)
-              sendToAI(sessionId)
-              complete(StatusCodes.OK)
-            }
-          },
-          path("save") {
-            post {
-              val serialized = controller.getGame(sessionId) match {
-                case Success(game) => gameStateSerializer.toString(game)
-                case Failure(ex)  => ""
-              }
-              val req = HttpRequest(
-                method = HttpMethods.POST,
-                uri = s"http://localhost:8082/persistence/storeGame?key=$sessionId",
-                entity = HttpEntity(ContentTypes.`application/json`, serialized)
-              )
-              onComplete(Http(system).singleRequest(req)) {
-                case Success(resp) if resp.status == StatusCodes.OK => complete(StatusCodes.OK)
-                case _ => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("load") {
-            post {
-              val req = HttpRequest(
+          }
+        },
+        path("load") {
+          post {
+            parameters("gameId") { gameId =>
+              val request = HttpRequest(
                 method = HttpMethods.GET,
-                uri = s"http://localhost:8082/persistence/retrieveGame?key=$sessionId"
+                uri = s"$persistenceServiceUrl/retrieveGame?key=$gameId"
               )
-              onComplete(Http(system).singleRequest(req)) {
-                case Success(resp) if resp.status == StatusCodes.OK =>
-                  onComplete(resp.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map(_.utf8String)) {
-                    case Success(data) =>
-                      val game = gameStateSerializer.fromString(gameFactory, data)
-                      controller.setGame(sessionId, game)
+
+              val response = Http(system).singleRequest(request)
+
+              onComplete(response) {
+                case Success(res: HttpResponse) if res.status == StatusCodes.OK =>
+                  onComplete(res.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map(_.utf8String)) {
+                    case Success(serializedData) =>
+                      val game = gameStateSerializer.fromString(gameFactory, serializedData)
+                      controller.setGame(game)
                       complete(StatusCodes.OK)
-                    case Failure(_) => complete(StatusCodes.InternalServerError)
+                    case Failure(_) =>
+                      complete(StatusCodes.InternalServerError)
                   }
+
                 case _ => complete(StatusCodes.InternalServerError)
               }
-            }
-          },
-          path("state") {
-            get {
-              complete(controller.gameToString(sessionId))
             }
           }
-        )
+        },
+        path("state") {
+          get {
+            complete(controller.toString)
+          }
+        },
+      )
+    } ~
+      pathPrefix("") {
+        getFromDirectory(Paths.get("m_client/dist").toFile.getAbsolutePath)
       }
-    )
-  }
 }

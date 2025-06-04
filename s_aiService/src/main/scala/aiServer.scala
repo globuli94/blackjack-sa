@@ -25,7 +25,6 @@ object aiServer {
           try {
             val json = Json.parse(jsonString)
             queue.offer(json) // offer json to the queue -> source
-            println(json)
             complete(StatusCodes.OK, "JSON queued")
           } catch {
             case ex: Exception =>
@@ -37,19 +36,20 @@ object aiServer {
     }
 
   // queue as SOURCE, processGameFlow as FLOW, sendCommandToController in SINK
-  val (queue: SourceQueueWithComplete[JsValue], steamDone: Future[akka.Done]) =
+  val (queue, streamDone) =
     Source.queue[JsValue](buffer, OverflowStrategy.backpressure)
       .via(processGameFlow)
-      .toMat(Sink.foreach(command =>
+      .toMat(Sink.foreach { commandStr =>
+        val parts = commandStr.split("/")
 
-        command match {
-          case "hit" => sendCommandToController(command)
-          case "stand" => sendCommandToController(command)
-          case _ => println("no valid command or not your turn")
-        }
+        parts(0) match
+          case "hit" | "stand" | "bet" =>
+            println(s"[Sink] Processed: ${parts.mkString("/")}")
+            sendCommandToController(commandStr)
 
-        println(s"[Sink] Processed: $command")
-      ))(Keep.both)
+          case _ =>
+            println(s"[Sink] Ignored invalid or untimely command: $commandStr")
+      })(Keep.both)
       .run()
 
   // AI logic as flow
@@ -65,13 +65,21 @@ object aiServer {
       } yield players(idx)
 
       val isAi = maybePlayer.flatMap(p => (p \ "name").asOpt[String]).exists(_.toLowerCase == "ai")
+      val maybeMoney = maybePlayer.flatMap(p => (p \ "money").asOpt[Int])
 
-      (maybeCurrentIdx, maybeGameState, maybePlayer) match {
-        case (Some(idx), Some("Started"), Some(_)) if isAi =>
+      (maybeCurrentIdx, maybeGameState, maybePlayer, maybeMoney) match {
+        case (Some(idx), Some("Started"), Some(_), Some(money)) if isAi =>
           val handValue = calculateBlackjackValue(json, idx)
           if (handValue < 17) "hit" else "stand"
 
-        case (_, Some(state), _) =>
+        case (Some(idx), Some("Betting"), Some(_), Some(money)) if isAi =>
+          if(money > 0) {
+            val bet = money / 2
+            s"bet/$bet"
+          } else {
+            "leave"
+          }
+        case (_, Some(state), _, _) =>
           s"Ignored game state: $state"
 
         case _ =>
@@ -105,11 +113,13 @@ object aiServer {
   }
 
   private def sendCommandToController(command: String): Future[HttpResponse] = {
-    val payloadJson = Json.obj("command" -> command)
     val request = HttpRequest(
       method = HttpMethods.POST,
-      uri = s"$baseUrl/command",
+      uri = s"$baseUrl/$command",
     )
+
+    println(request)
+
     Http().singleRequest(request)
   }
 
