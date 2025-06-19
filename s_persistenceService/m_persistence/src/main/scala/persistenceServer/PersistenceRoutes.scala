@@ -10,22 +10,27 @@ import slick.jdbc.PostgresProfile.api._
 import persistenceComponent.postgresPersistence.PostgreSQLPersistence
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json.Json
+import persistenceComponent.PersistenceDAOInterface
 
-class PersistenceRoutes {
-
-  val db = Database.forConfig("slick.db.default")
-  val persistence = new PostgreSQLPersistence(db)
-  persistence.init()
+class PersistenceRoutes(db: PersistenceDAOInterface) {
 
   val routes: Route =
     pathPrefix("persistence") {
       concat(
+        path("gameExists") {
+          parameter("key") { key =>
+            onSuccess(db.exists(key)) {
+              case true  => complete(StatusCodes.OK, "true")
+              case false => complete(StatusCodes.NotFound, "false")
+            }
+          }
+        },
         path("storeGame") {
           parameter("key") { key =>
             entity(as[String]) { jsonString =>
               parseGameState(jsonString) match {
                 case Success(game) => {
-                  onComplete(persistence.save(key, game)) {
+                  onComplete(db.save(key, game)) {
                     case Success(_) => complete(StatusCodes.OK)
                     case Failure(_) => complete(StatusCodes.InternalServerError, "Saving failed")
                   }
@@ -37,7 +42,7 @@ class PersistenceRoutes {
         },
         path("retrieveGame") {
           parameter("key") { key =>
-            onSuccess(persistence.get(key)) {
+            onSuccess(db.get(key)) {
               case Some(gameState) =>
                 complete(HttpEntity(ContentTypes.`application/json`, Json.stringify(Json.toJson(gameState))))
               case None =>

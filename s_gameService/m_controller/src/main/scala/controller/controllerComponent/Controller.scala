@@ -13,12 +13,11 @@ class Controller @Inject()(gameFactory: GameFactoryInterface)
 
   private val sessions = TrieMap.empty[String, GameInterface]
 
-  def createSession(sessionId: String): Try[Unit] = {
+  def createSession(sessionId: String, game: GameInterface = gameFactory()): Try[Unit] = {
     if (sessions.contains(sessionId))
       Failure(new Exception(s"Session '$sessionId' exists already"))
     else {
-      val newGame = gameFactory()
-      sessions.put(sessionId, newGame)
+      sessions.put(sessionId, game)
       notifyObservers(Event.load)
       Success(())
     }

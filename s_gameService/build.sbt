@@ -11,9 +11,6 @@ lazy val model = (project in file("m_model"))
       "org.scalactic" %% "scalactic" % "3.2.18",
       "org.scalamock" %% "scalamock" % "6.0.0" % Test,
       "org.mockito" % "mockito-core" % "5.14.2" % Test,
-      "com.typesafe.akka" %% "akka-stream" % "2.8.8",
-      "com.typesafe.akka" %% "akka-http" % "10.5.3",
-      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8"
     )
   )
 
@@ -31,9 +28,6 @@ lazy val serializer = (project in file("m_serializer"))
       "org.scalactic" %% "scalactic" % "3.2.18",
       "org.scalamock" %% "scalamock" % "6.0.0" % Test,
       "org.mockito" % "mockito-core" % "5.14.2" % Test,
-      "com.typesafe.akka" %% "akka-stream" % "2.8.8",
-      "com.typesafe.akka" %% "akka-http" % "10.5.3",
-      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8"
     )
   )
 
@@ -49,9 +43,11 @@ lazy val controller = (project in file("m_controller"))
       "org.scalactic" %% "scalactic" % "3.2.18",
       "org.scalamock" %% "scalamock" % "6.0.0" % Test,
       "org.mockito" % "mockito-core" % "5.14.2" % Test,
-      "com.typesafe.akka" %% "akka-stream" % "2.8.8",
       "com.typesafe.akka" %% "akka-http" % "10.5.3",
-      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8"
+      "com.typesafe.akka" %% "akka-stream-kafka" % "4.0.2",
+      "com.typesafe.akka" %% "akka-actor" % "2.8.8",
+      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8",
+      "com.typesafe.akka" %% "akka-stream" % "2.8.8",
     )
   )
 

@@ -6,7 +6,7 @@ import model.modelComponent.GameInterface
 import scala.util.Try
 
 trait ControllerInterface extends Observable {
-  def createSession(sessionId: String): Try[Unit]
+  def createSession(sessionId: String, game: GameInterface = ???): Try[Unit]
   def getGame(sessionId: String): Try[GameInterface]
   def setGame(sessionId: String, other: GameInterface): Try[Unit]
   def initializeGame(sessionId: String): Try[Unit]

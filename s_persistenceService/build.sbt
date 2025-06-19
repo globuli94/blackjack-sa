@@ -24,6 +24,8 @@ lazy val persistence = (project in file("m_persistence"))
       "org.slf4j" % "slf4j-api" % "1.7.36",
       "org.slf4j" % "slf4j-simple" % "1.7.36",
       "org.postgresql" % "postgresql" % "42.3.3",
+      "com.typesafe.akka" %% "akka-actor-typed" % "2.8.8",
+      "com.typesafe.akka" %% "akka-stream-kafka" % "4.0.2",
     )
   )
 

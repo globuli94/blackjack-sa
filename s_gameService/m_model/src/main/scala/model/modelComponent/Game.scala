@@ -323,18 +323,6 @@ case class Game @Inject() (
 
   override def toString: String = {
 
-    println("\u001b[H\u001b[2J") // Clear console
-    // ASCII Art Title
-    println(
-      "         ____  __           __     _            __  \n" +
-        "        / __ )/ /___ ______/ /__  (_)___ ______/ /__\n" +
-        "       / __  / / __ `/ ___/ //_/ / / __ `/ ___/ //_/\n" +
-        "      / /_/ / / /_/ / /__/ ,<   / / /_/ / /__/ ,<   \n" +
-        "     /_____/_/\\__,_/\\___/_/|_|_/ /\\__,_/\\___/_/|_|  \n" +
-        "                            /___/                    "
-    )
-    println("\n")
-
     val stringBuilder = new StringBuilder()
 
     // Dealer Box Centered

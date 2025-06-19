@@ -7,5 +7,6 @@ trait PersistenceDAOInterface {
   def init(): Future[Unit]
   def save(gameId: String, gameStateJson: GameState): Future[Unit]
   def get(gameId: String): Future[Option[GameState]]
+  def exists(gameId: String): Future[Boolean]
   def delete(gameId: String): Future[Unit]
 }

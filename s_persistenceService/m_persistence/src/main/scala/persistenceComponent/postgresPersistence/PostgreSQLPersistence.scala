@@ -37,6 +37,11 @@ class PostgreSQLPersistence(db: Database)(using ec: ExecutionContext) extends Pe
     }
   }
 
+  def exists(gameId: String): Future[Boolean] = {
+    val query = gameStates.filter(_.gameId === gameId).exists.result
+    db.run(query)
+  }
+
   def delete(gameId: String): Future[Unit] = {
     val action = gameStates.filter(_.gameId === gameId).delete
     db.run(action).map(_ => ())

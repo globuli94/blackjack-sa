@@ -3,27 +3,58 @@ package controller.controllerServer
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.*
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.util.ByteString
 import com.google.inject.{Guice, Inject, Injector}
 import controller.ControllerInterface
-import model.modelComponent.GameFactoryInterface
+import controller.util.KafkaProducer
+import model.modelComponent.{GameFactoryInterface, GameInterface}
 import serializer.serializerComponent.GameStateSerializer
+import serializer.serializerComponent.JSON.JSONSerializer
 
 import java.nio.file.Paths
 import java.util.UUID
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit system: ActorSystem) {
+
   private val injector: Injector = Guice.createInjector(new ControllerModule)
   private val gameStateSerializer: GameStateSerializer = injector.getInstance(classOf[GameStateSerializer])
   private val gameFactory: GameFactoryInterface = injector.getInstance(classOf[GameFactoryInterface])
-
   implicit val ec: ExecutionContext = system.dispatcher
+  private val kafkaProducer = KafkaProducer("kafka:9092")
 
+  private def checkIfGameExistsInDb(sessionId: String)
+                       (implicit system: ActorSystem, ec: ExecutionContext): Future[Boolean] = {
+    val url = s"http://persistence_service:8082/persistence/gameExists?key=$sessionId"
+    Http().singleRequest(HttpRequest(uri = url)).map { resp =>
+      resp.status == StatusCodes.OK
+    }
+  }
+
+  private def retrieveGameFromDb(sessionId: String)
+                          (implicit system: ActorSystem, ec: ExecutionContext): Future[Option[GameInterface]] = {
+    val url = s"http://persistence_service:8082/persistence/retrieveGame?key=$sessionId"
+    Http().singleRequest(HttpRequest(uri = url)).flatMap { resp =>
+      if (resp.status == StatusCodes.OK) {
+        resp.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map { body =>
+          val jsonString = body.utf8String
+          Some(gameStateSerializer.fromString(gameFactory, jsonString))
+        }
+      } else {
+        Future.successful(None)
+      }
+    }
+  }
+
+  private def sendGameUpdate(sessionId: String): Unit = {
+    val gameInstance = controller.getGame(sessionId).get
+    kafkaProducer.publish("controller.gameUpdate", sessionId, gameStateSerializer.toString(gameInstance))
+  }
+  
   val routes: Route =
     concat(
       pathEndOrSingleSlash {
@@ -34,8 +65,30 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.createSession(sessionId)
               redirect(s"/?sessionId=$sessionId", StatusCodes.SeeOther)
 
-            case Some(id) =>
-              getFromFile(Paths.get("m_client/dist/index.html").toFile)
+            case Some(sessionId) =>
+              // Wenn das Spiel in den aktiven Spielen vom Controller ist
+              // müssen wir es ganz sicher nicht aus der DB nuckeln
+              if(controller.getGame(sessionId).isSuccess)
+                getFromFile(Paths.get("m_client/dist/index.html").toFile)
+              else {
+                // Wenns nicht dann gucken wir obs schon in der Datenbank liegt
+                onSuccess(checkIfGameExistsInDb(sessionId)) {
+                  case true =>
+                    onSuccess(retrieveGameFromDb(sessionId)) { retrievedGame =>
+                      println("Successfully retrieved Game")
+                      controller.createSession(sessionId, retrievedGame.get) match {
+                        case Success(_) =>
+                          getFromFile(Paths.get("m_client/dist/index.html").toFile)
+                        case Failure(ex) =>
+                          complete(StatusCodes.InternalServerError)
+                      }
+                    }
+                  case false =>
+                    println("Game doesn't exist in DB")
+                    controller.createSession(sessionId)
+                    getFromFile(Paths.get("m_client/dist/index.html").toFile)
+                }
+              }
           }
         }
       },
@@ -47,15 +100,20 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("start") {
             post {
               controller.startGame(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
           },
           path("addPlayer" / Segment) { name =>
             post {
+              print("addingPlayer")
               controller.addPlayer(sessionId, name) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -63,7 +121,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("hit") {
             post {
               controller.hitPlayer(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -71,7 +131,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("stand") {
             post {
               controller.standPlayer(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -79,7 +141,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("doubleDown") {
             post {
               controller.doubleDown(sessionId) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -87,7 +151,9 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("bet" / Segment) { amount =>
             post {
               controller.bet(sessionId, amount) match {
-                case Success(_) => complete(StatusCodes.OK)
+                case Success(_) =>
+                  sendGameUpdate(sessionId)
+                  complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
             }
@@ -95,43 +161,8 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           path("leave") {
             post {
               controller.leavePlayer(sessionId)
+              sendGameUpdate(sessionId)
               complete(StatusCodes.OK)
-            }
-          },
-          path("save") {
-            post {
-              val serialized = controller.getGame(sessionId) match {
-                case Success(game) => gameStateSerializer.toString(game)
-                case Failure(ex)  => ""
-              }
-              val req = HttpRequest(
-                method = HttpMethods.POST,
-                uri = s"http://persistence_service:8082/persistence/storeGame?key=$sessionId",
-                entity = HttpEntity(ContentTypes.`application/json`, serialized)
-              )
-              onComplete(Http(system).singleRequest(req)) {
-                case Success(resp) if resp.status == StatusCodes.OK => complete(StatusCodes.OK)
-                case _ => complete(StatusCodes.InternalServerError)
-              }
-            }
-          },
-          path("load") {
-            post {
-              val req = HttpRequest(
-                method = HttpMethods.GET,
-                uri = s"http://persistence_service:8082/persistence/retrieveGame?key=$sessionId"
-              )
-              onComplete(Http(system).singleRequest(req)) {
-                case Success(resp) if resp.status == StatusCodes.OK =>
-                  onComplete(resp.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map(_.utf8String)) {
-                    case Success(data) =>
-                      val game = gameStateSerializer.fromString(gameFactory, data)
-                      controller.setGame(sessionId, game)
-                      complete(StatusCodes.OK)
-                    case Failure(_) => complete(StatusCodes.InternalServerError)
-                  }
-                case _ => complete(StatusCodes.InternalServerError)
-              }
             }
           },
           path("state") {
