@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    stdin_open: true  # keeps terminal open for tui
+    stdin_open: true
     tty: true
 
   persistence_service:

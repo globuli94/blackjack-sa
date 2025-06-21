@@ -54,6 +54,10 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
     val gameInstance = controller.getGame(sessionId).get
     kafkaProducer.publish("controller.gameUpdate", sessionId, gameStateSerializer.toString(gameInstance))
   }
+
+  private def sendGameTuiUpdate(sessionId: String): Unit = {
+    kafkaProducer.publish("controller.tuiUpdate", sessionId, controller.gameToString(sessionId))
+  }
   
   val routes: Route =
     concat(
@@ -95,6 +99,18 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
       pathPrefix("") {
         getFromDirectory(Paths.get("m_client/dist").toFile.getAbsolutePath)
       },
+      pathPrefix("createSession" / Segment) { sessionId =>
+        post {
+          controller.createSession(sessionId) match {
+            case Success(_) =>
+              sendGameUpdate(sessionId)
+              sendGameTuiUpdate(sessionId)
+              complete(StatusCodes.OK)
+            case Failure(_) =>
+              complete(StatusCodes.InternalServerError)
+          }
+        }
+      },
       pathPrefix("game" / Segment) { sessionId =>
         concat(
           path("start") {
@@ -102,6 +118,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.startGame(sessionId) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -109,10 +126,10 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
           },
           path("addPlayer" / Segment) { name =>
             post {
-              print("addingPlayer")
               controller.addPlayer(sessionId, name) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -123,6 +140,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.hitPlayer(sessionId) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -133,6 +151,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.standPlayer(sessionId) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -143,6 +162,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.doubleDown(sessionId) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -153,6 +173,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
               controller.bet(sessionId, amount) match {
                 case Success(_) =>
                   sendGameUpdate(sessionId)
+                  sendGameTuiUpdate(sessionId)
                   complete(StatusCodes.OK)
                 case Failure(_) => complete(StatusCodes.InternalServerError)
               }
@@ -162,6 +183,7 @@ class ControllerRoutes @Inject()(controller: ControllerInterface)(implicit syste
             post {
               controller.leavePlayer(sessionId)
               sendGameUpdate(sessionId)
+              sendGameTuiUpdate(sessionId)
               complete(StatusCodes.OK)
             }
           },
