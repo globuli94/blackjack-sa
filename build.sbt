@@ -1,33 +1,21 @@
-val scala3Version = "3.5.1"
-val javaFXVersion = "23.0.1"
+ThisBuild / scalaVersion := "3.3.1"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-swing" % "3.0.0"
-
-lazy val root = project
-  .in(file("."))
+lazy val s_gameService = (project in file("s_gameService"))
   .settings(
-      name := "blackjack",
-      version := "0.1.0-SNAPSHOT",
+    name := "s_gameService",
+    mainClass := Some("controller.controllerServer.ControllerServer") // specify the main class here
+  )
 
-      scalaVersion := scala3Version,
+lazy val s_tuiService = (project in file("s_tuiService"))
+  .settings(
+    name := "s_tuiService",
+    mainClass := Some("tui.TUIApp") // specify the main class here
+  )
 
-      libraryDependencies ++= Seq(
-        // gui
-        "org.scala-lang.modules" %% "scala-swing" % "3.0.0",
-
-        // scala test
-        "org.scalameta" %% "munit" % "1.0.0" % Test,
-        "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-        "org.scalactic" %% "scalactic" % "3.2.18",
-        "org.scalamock" %% "scalamock" % "6.0.0" % Test,
-        "org.mockito" % "mockito-core" % "5.14.2" % Test,
-
-        // dependency injection
-        "net.codingwell" %% "scala-guice" % "7.0.0",
-        "com.google.inject" % "guice" % "7.0.0",
-
-        // file io
-        "org.scala-lang.modules" %% "scala-xml" % "2.3.0",
-        "com.typesafe.play" %% "play-json" % "2.10.5",
-      ),
+lazy val root = (project in file("."))
+  .aggregate(s_gameService, s_tuiService)
+  .dependsOn(s_gameService, s_tuiService)
+  .settings(
+    name := "blackjack",
+    Compile / run := (s_gameService / Compile / run).evaluated // default run for root
   )
